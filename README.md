@@ -4,7 +4,7 @@ This library provides provides a convient interface for developing Amazon Alexa 
 
 ## Usage
 
-Install via composer: `composer require froodley/amazon-alexa-php`.
+Install via composer: `composer require froodley/amazon-alexa-php`
 
 ### Requests
 When Amazon Alexa triggers your skill, a HTTP request will be sent to the URL you specified for your app.
