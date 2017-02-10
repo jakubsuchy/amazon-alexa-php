@@ -1,5 +1,5 @@
 {
-    "name": "jakubsuchy/amazon-alexa-php",
+    "name": "froodley/amazon-alexa-php",
     "description": "Amazon Alexa interface for PHP",
     "license": "MIT",
     "type": "library",
@@ -15,6 +15,10 @@
         {
             "name": "Jakub Suchy",
             "email": "info@jsuchy.cz"
+        },
+        {
+            "name": "Pete Burkindine",
+            "email": "pete@burkindine.net"
         }
     ],
     "require": {

@@ -4,7 +4,7 @@ This library provides provides a convient interface for developing Amazon Alexa 
 
 ## Usage
 
-Install via composer: `composer require minicodemonkey/amazon-alexa-php`.
+Install via composer: `composer require froodley/amazon-alexa-php`.
 
 ### Requests
 When Amazon Alexa triggers your skill, a HTTP request will be sent to the URL you specified for your app.
@@ -12,9 +12,8 @@ When Amazon Alexa triggers your skill, a HTTP request will be sent to the URL yo
 You can get the `JSON` body of the request like so:
 ```php
 $applicationId = "your-application-id-from-alexa"; // See developer.amazon.com and your Application. Will start with "amzn1.echo-sdk-ams.app."
-$rawRequest = $request->getContent; // This is how you would retrieve this with Laravel or Symfony 2.
-$alexa = new \Alexa\Request\Request($rawRequest, $applicationId);
-$alexaRequest = $alexa->fromData();
+$rawRequest = $request->getContent(); // This is how you would retrieve this with Laravel or Symfony 2.
+$alexaRequest = \Alexa\Request\Request::fromRawData($rawRequest, $applicationId);
 ```
 
 The library expect raw request data, not parsed JSON as it needs to validate the request signature.
