@@ -2,99 +2,172 @@
 
 namespace Alexa\Request;
 
-use RuntimeException;
-use InvalidArgumentException;
-use DateTime;
+use \RuntimeException;
+use \DateTime;
 
 use Alexa\Request\Certificate;
 use Alexa\Request\Application;
 
-class Request {
+/**
+ * Class Request
+ *
+ * Encapsulate an Alexa request
+ *
+ * @package Alexa\Request
+ */
+abstract class Request implements RequestInterface
+{
+    // Constants
 
-	public $requestId;
-	public $timestamp;
-	/** @var Session */
-	public $session;
-	public $data;
-	public $rawData;
-	public $applicationid;
+    const ERROR_INVALID_REQUEST_TYPE = 'Unknown Request Type: %s';
 
-	/**
-	 * Set up Request with RequestId, timestamp (DateTime) and user (User obj.)
-	 * @param type $data
-	 */
-	public function __construct($rawData, $applicationId = NULL) {
-		if (!is_string($rawData)) {
-			throw new InvalidArgumentException('Alexa Request requires the raw JSON data to validate request signature');
-		}
+    // Fields
 
-		// Decode the raw data into a JSON array.
-		$data = json_decode($rawData, TRUE);
-		$this->data = $data;
-		$this->rawData = $rawData;
+    /**
+     * @var string
+     */
+    public $requestId;
+    /**
+     * @var DateTime
+     */
+    public $timestamp;
+    /**
+     * @var Session
+     */
+    public $session;
+    /**
+     * @var array
+     */
+    public $data;
+    /**
+     * @var string
+     */
+    public $rawData;
+    /**
+     * @var string
+     */
+    public $applicationId;
 
-		$this->requestId = $data['request']['requestId'];
-		$this->timestamp = new DateTime($data['request']['timestamp']);
-		$this->session = new Session($data['session']);
+    // Hooks
 
-		$this->applicationId = (is_null($applicationId) && isset($data['session']['application']['applicationId']))
-			? $data['session']['application']['applicationId']
-			: $applicationId;
+    /**
+     * Request()
+     *
+     * Parse the JSON onto the RequestInterface object
+     *
+     * @param string $rawData - The original JSON response, before json_decode
+     * @param string $applicationId - Your Alexa Dev Portal application ID
+     * @param Certificate $certificate = null - Override the auto-generated Certificate with your own
+     * @param Application $application = null - Override the auto-generated Application with your own
+     */
+    public function __construct($rawData, $applicationId, $certificate = null, $application = null)
+    {
+        // Check $rawData format
+        if (!is_string($rawData)) {
+            throw new \InvalidArgumentException('Alexa Request requires the raw JSON data '.
+                'to validate request signature');
+        }
 
-	}
+        // Store the raw data
+        $this->rawData = $rawData;
 
-	/**
-	 * Accept the certificate validator dependency in order to allow people
-	 * to extend it to for example cache their certificates.
-	 * @param \Alexa\Request\Certificate $certificate
-	 */
-	public function setCertificateDependency(\Alexa\Request\Certificate $certificate) {
-		$this->certificate = $certificate;
-	}
+        // Decode the raw data into a JSON array
+        $this->data = json_decode($rawData, true);
 
-	/**
-	 * Accept the application validator dependency in order to allow people
-	 * to extend it.
-	 * @param \Alexa\Request\Application $application
-	 */
-	public function setApplicationDependency(\Alexa\Request\Application $application) {
-		$this->application = $application;
-	}
+        // Parse top-level values
+        $this->requestId = $this->data['request']['requestId'];
+        $this->timestamp = new DateTime($this->data['request']['timestamp']);
+        $this->session = new Session($this->data['session']);
+        $this->applicationId = $applicationId;
 
-	/**
-	 * Instance the correct type of Request, based on the $jons->request->type
-	 * value.
-	 * @param type $data
-	 * @return \Alexa\Request\Request   base class
-	 * @throws RuntimeException
-	 */
-	public function fromData() {
-		$data = $this->data;
+        // Create certificate from server data if not provided
+        $this->certificate = $certificate ?:
+            new Certificate($_SERVER['HTTP_SIGNATURECERTCHAINURL'], $_SERVER['HTTP_SIGNATURE']);
 
-		// Instantiate a new Certificate validator if none is injected
-		// as our dependency.
-		if (!isset($this->certificate)) {
-			$this->certificate = new Certificate($_SERVER['HTTP_SIGNATURECERTCHAINURL'], $_SERVER['HTTP_SIGNATURE']);
-		}
-		if (!isset($this->application)) {
-			$this->application = new Application($this->applicationId);
-		}
+        // Create application from ID if override not provided
+        $this->application = $application ?: new Application($applicationId);
+    }
 
-		// We need to ensure that the request Application ID matches our Application ID.
-		$this->application->validateApplicationId($data['session']['application']['applicationId']);
-		// Validate that the request signature matches the certificate.
-		$this->certificate->validateRequest($this->rawData);
+    // Factory
 
+    /**
+     * fromRawData()
+     *
+     * Return an instance of the correct type of Request from the raw JSON string
+     *
+     *
+     * @param string $rawData - The raw POST value, before json_decode
+     * @param string $applicationId - Your application's ID (from the dev portal)
+     * @param Certificate $certificate = null - Override the auto-generated Certificate with your own
+     * @param Application $application = null - Override the auto-generated Application with your own
+     *
+     * @return \Alexa\Request\Request
+     * @throws RuntimeException
+     */
+    public static function fromRawData(
+        $rawData,
+        $applicationId,
+        Certificate $certificate = null,
+        Application $application = null
+    ) {
+        // Parse data for construction
+        $data = json_decode($rawData, true);;
 
-		$requestType = $data['request']['type'];
-		if (!class_exists('\\Alexa\\Request\\' . $requestType)) {
-			throw new RuntimeException('Unknown request type: ' . $requestType);
-		}
+        // Generate base request
+        $request = static::generateRequest($data, $rawData, $applicationId, $certificate, $application);
 
-		$className = '\\Alexa\\Request\\' . $requestType;
+        // Validate received application ID matches client value
+        $request->application->validateApplicationId($data['session']['application']['applicationId']);
 
-		$request = new $className($this->rawData);
-		return $request;
-	}
+        // Validate that the request signature matches the certificate
+        $request->certificate->validateRequest($rawData);
 
+        // Return complete request
+        return $request;
+    }
+
+    // Protected Methods
+
+    /**
+     * generateRequest()
+     *
+     * Generate a RequestInterface object of the correct type
+     *
+     * @param array $data
+     * @param $rawData
+     * @param $applicationId
+     * @param Certificate $certificate = null - Override the auto-generated Certificate with your own
+     * @param Application $application = null - Override the auto-generated Application with your own
+     *
+     * @return mixed
+     * @throws \RuntimeException - If the request type is not a valid RequestInterface class
+     */
+    protected static function generateRequest(
+        array $data,
+        $rawData,
+        $applicationId,
+        $certificate,
+        $application
+    ) {
+        // Retrieve request type
+        $requestType = $data['request']['type'];
+
+        // Generate fully-qualified class name
+        $className = '\\Alexa\\Request\\' . $requestType;
+
+        // Validate request type
+        if (!class_exists($className) ||
+            !in_array(RequestInterface::class, class_implements($className))
+        ) {
+            throw new \RuntimeException(
+                sprintf(static::ERROR_INVALID_REQUEST_TYPE, $requestType)
+            );
+        }
+
+        // Generate request
+        $request = new $className($rawData, $applicationId, $certificate, $application);
+
+        // Return
+        return $request;
+    }
 }
