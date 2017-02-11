@@ -22,8 +22,8 @@ class SessionEndedRequest extends Request implements RequestInterface
      *
      * @param string $rawData - The original JSON response, before json_decode
      * @param string $applicationId - Your Alexa Dev Portal application ID
-     * @param Certificate $certificate = null - Override the auto-generated Certificate with your own
-     * @param Application $application = null - Override the auto-generated Application with your own
+     * @param Certificate|null $certificate - Override the auto-generated Certificate with your own
+     * @param Application|null $application - Override the auto-generated Application with your own
      */
     public function __construct($rawData, $applicationId, $certificate = null, $application = null)
     {

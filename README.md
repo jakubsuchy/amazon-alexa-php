@@ -1,6 +1,8 @@
 # Amazon Alexa PHP Library
 
-This library provides provides a convient interface for developing Amazon Alexa Skills for your PHP app.
+This library provides provides a convenient interface for developing Amazon Alexa Skills for your PHP app.
+
+It represents a breaking change and is forked from jakobsuchy/amazon-alexa-php
 
 ## Usage
 

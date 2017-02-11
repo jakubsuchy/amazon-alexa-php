@@ -57,8 +57,8 @@ abstract class Request implements RequestInterface
      *
      * @param string $rawData - The original JSON response, before json_decode
      * @param string $applicationId - Your Alexa Dev Portal application ID
-     * @param Certificate $certificate = null - Override the auto-generated Certificate with your own
-     * @param Application $application = null - Override the auto-generated Application with your own
+     * @param Certificate|null $certificate - Override the auto-generated Certificate with your own
+     * @param Application|null $application - Override the auto-generated Application with your own
      */
     public function __construct($rawData, $applicationId, $certificate = null, $application = null)
     {
@@ -98,8 +98,8 @@ abstract class Request implements RequestInterface
      *
      * @param string $rawData - The raw POST value, before json_decode
      * @param string $applicationId - Your application's ID (from the dev portal)
-     * @param Certificate $certificate = null - Override the auto-generated Certificate with your own
-     * @param Application $application = null - Override the auto-generated Application with your own
+     * @param Certificate|null $certificate - Override the auto-generated Certificate with your own
+     * @param Application|null $application - Override the auto-generated Application with your own
      *
      * @return \Alexa\Request\Request
      * @throws RuntimeException
@@ -111,7 +111,7 @@ abstract class Request implements RequestInterface
         Application $application = null
     ) {
         // Parse data for construction
-        $data = json_decode($rawData, true);;
+        $data = json_decode($rawData, true);
 
         // Generate base request
         $request = static::generateRequest($data, $rawData, $applicationId, $certificate, $application);
@@ -136,8 +136,8 @@ abstract class Request implements RequestInterface
      * @param array $data
      * @param $rawData
      * @param $applicationId
-     * @param Certificate $certificate = null - Override the auto-generated Certificate with your own
-     * @param Application $application = null - Override the auto-generated Application with your own
+     * @param Certificate|null $certificate - Override the auto-generated Certificate with your own
+     * @param Application|null $application - Override the auto-generated Application with your own
      *
      * @return mixed
      * @throws \RuntimeException - If the request type is not a valid RequestInterface class
@@ -152,20 +152,18 @@ abstract class Request implements RequestInterface
         // Retrieve request type
         $requestType = $data['request']['type'];
 
-        // Generate fully-qualified class name
-        $className = '\\Alexa\\Request\\' . $requestType;
-
         // Validate request type
-        if (!class_exists($className) ||
-            !in_array(RequestInterface::class, class_implements($className))
-        ) {
+        if (!in_array($requestType, array_keys(CustomSkillRequestTypes::$validTypes))) {
             throw new \RuntimeException(
                 sprintf(static::ERROR_INVALID_REQUEST_TYPE, $requestType)
             );
         }
 
+        // Retrieve the correct request child class
+        $requestClass = CustomSkillRequestTypes::$validTypes[$requestType];
+
         // Generate request
-        $request = new $className($rawData, $applicationId, $certificate, $application);
+        $request = new $requestClass($rawData, $applicationId, $certificate, $application);
 
         // Return
         return $request;
