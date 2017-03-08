@@ -44,13 +44,14 @@ class RequestFactory
         $data = json_decode($rawData, true);
 
         // Generate base request
+        /** @var Request $request */
         $request = $this->generateRequest($data, $rawData, $applicationId, $certificate, $application);
 
         // Validate received application ID matches client value
-        $request->application->validateApplicationId($data['session']['application']['applicationId']);
+        $request->getApplication()->validateApplicationId($data['session']['application']['applicationId']);
 
         // Validate that the request signature matches the certificate
-        $request->certificate->validateRequest($rawData);
+        $request->getCertificate()->validateRequest($rawData);
 
         // Return complete request
         return $request;

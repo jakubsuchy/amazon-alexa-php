@@ -29,13 +29,17 @@ class IntentRequest extends Request implements RequestInterface
      * @param Certificate|null $certificate - Override the auto-generated Certificate with your own
      * @param Application|null $application - Override the auto-generated Application with your own
      */
-    public function __construct($rawData, $applicationId, $certificate = null, $application = null)
-    {
+    public function __construct(
+        $rawData,
+        $applicationId,
+        Certificate $certificate = null,
+        Application $application = null
+    ) {
         // Parent construct
         parent::__construct($rawData, $applicationId, $certificate, $application);
 
         // Retrieve intent name
-        $this->intentName = $this->data['request']['intent']['name'];
+        $this->setIntentName($this->data['request']['intent']['name']);
 
         // Generate $this->slots
         $this->generateSlotData();
@@ -116,5 +120,23 @@ class IntentRequest extends Request implements RequestInterface
     public function getSlots()
     {
         return $this->slots;
+    }
+
+    // Mutators
+
+    /**
+     * @param string $intentName
+     */
+    public function setIntentName($intentName)
+    {
+        $this->intentName = $intentName;
+    }
+
+    /**
+     * @param array $slots
+     */
+    public function setSlots($slots)
+    {
+        $this->slots = $slots;
     }
 }

@@ -25,12 +25,16 @@ class SessionEndedRequest extends Request implements RequestInterface
      * @param Certificate|null $certificate - Override the auto-generated Certificate with your own
      * @param Application|null $application - Override the auto-generated Application with your own
      */
-    public function __construct($rawData, $applicationId, $certificate = null, $application = null)
-    {
+    public function __construct(
+        $rawData,
+        $applicationId,
+        Certificate $certificate = null,
+        Application $application = null
+    ) {
         // Parent construct
         parent::__construct($rawData, $applicationId, $certificate, $application);
 
-        $this->reason = $this->data['request']['reason'];
+        $this->setReason($this->data['request']['reason']);
     }
 
     // Accessors
@@ -41,5 +45,15 @@ class SessionEndedRequest extends Request implements RequestInterface
     public function getReason()
     {
         return $this->reason;
+    }
+
+    // Mutators
+
+    /**
+     * @param string $reason
+     */
+    public function setReason($reason)
+    {
+        $this->reason = $reason;
     }
 }

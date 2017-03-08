@@ -64,8 +64,12 @@ abstract class Request implements RequestInterface
      * @param Certificate|null $certificate - Override the auto-generated Certificate with your own
      * @param Application|null $application - Override the auto-generated Application with your own
      */
-    public function __construct($rawData, $applicationId, $certificate = null, $application = null)
-    {
+    public function __construct(
+        $rawData,
+        $applicationId,
+        Certificate $certificate = null,
+        Application $application = null
+    ) {
         // Check $rawData format
         if (!is_string($rawData)) {
             throw new \InvalidArgumentException('Alexa Request requires the raw JSON data '.
@@ -157,5 +161,71 @@ abstract class Request implements RequestInterface
     public function getApplication()
     {
         return $this->application;
+    }
+
+    // Mutators
+
+    /**
+     * @param string $requestId
+     */
+    public function setRequestId($requestId)
+    {
+        $this->requestId = $requestId;
+    }
+
+    /**
+     * @param DateTime $timestamp
+     */
+    public function setTimestamp($timestamp)
+    {
+        $this->timestamp = $timestamp;
+    }
+
+    /**
+     * @param Session $session
+     */
+    public function setSession($session)
+    {
+        $this->session = $session;
+    }
+
+    /**
+     * @param array $data
+     */
+    public function setData($data)
+    {
+        $this->data = $data;
+    }
+
+    /**
+     * @param string $rawData
+     */
+    public function setRawData($rawData)
+    {
+        $this->rawData = $rawData;
+    }
+
+    /**
+     * @param string $applicationId
+     */
+    public function setApplicationId($applicationId)
+    {
+        $this->applicationId = $applicationId;
+    }
+
+    /**
+     * @param \Alexa\Request\Certificate $certificate
+     */
+    public function setCertificate($certificate)
+    {
+        $this->certificate = $certificate;
+    }
+
+    /**
+     * @param \Alexa\Request\Application $application
+     */
+    public function setApplication($application)
+    {
+        $this->application = $application;
     }
 }
