@@ -13,11 +13,11 @@ class IntentRequest extends Request implements RequestInterface
     /**
      * @var string
      */
-    public $intentName;
+    protected $intentName;
     /**
      * @var array
      */
-    public $slots = array();
+    protected $slots = array();
 
     // Hooks
 
@@ -98,5 +98,23 @@ class IntentRequest extends Request implements RequestInterface
         if (isset($slot['value'])) {
             $this->slots[$slot['name']] = $slot['value'];
         }
+    }
+
+    // Accessors
+
+    /**
+     * @return string
+     */
+    public function getIntentName()
+    {
+        return $this->intentName;
+    }
+
+    /**
+     * @return array
+     */
+    public function getSlots()
+    {
+        return $this->slots;
     }
 }

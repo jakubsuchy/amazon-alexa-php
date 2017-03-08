@@ -22,27 +22,35 @@ abstract class Request implements RequestInterface
     /**
      * @var string
      */
-    public $requestId;
+    protected $requestId;
     /**
      * @var DateTime
      */
-    public $timestamp;
+    protected $timestamp;
     /**
      * @var Session
      */
-    public $session;
+    protected $session;
     /**
      * @var array
      */
-    public $data;
+    protected $data;
     /**
      * @var string
      */
-    public $rawData;
+    protected $rawData;
     /**
      * @var string
      */
-    public $applicationId;
+    protected $applicationId;
+    /**
+     * @var \Alexa\Request\Certificate
+     */
+    protected $certificate;
+    /**
+     * @var \Alexa\Request\Application
+     */
+    protected $application;
 
     // Hooks
 
@@ -84,4 +92,70 @@ abstract class Request implements RequestInterface
         $this->application = $application ?: new Application($applicationId);
     }
 
+
+    // Accessors
+
+    /**
+     * @return string
+     */
+    public function getRequestId()
+    {
+        return $this->requestId;
+    }
+
+    /**
+     * @return DateTime
+     */
+    public function getTimestamp()
+    {
+        return $this->timestamp;
+    }
+
+    /**
+     * @return Session
+     */
+    public function getSession()
+    {
+        return $this->session;
+    }
+
+    /**
+     * @return array
+     */
+    public function getData()
+    {
+        return $this->data;
+    }
+
+    /**
+     * @return string
+     */
+    public function getRawData()
+    {
+        return $this->rawData;
+    }
+
+    /**
+     * @return string
+     */
+    public function getApplicationId()
+    {
+        return $this->applicationId;
+    }
+
+    /**
+     * @return \Alexa\Request\Certificate
+     */
+    public function getCertificate()
+    {
+        return $this->certificate;
+    }
+
+    /**
+     * @return \Alexa\Request\Application
+     */
+    public function getApplication()
+    {
+        return $this->application;
+    }
 }

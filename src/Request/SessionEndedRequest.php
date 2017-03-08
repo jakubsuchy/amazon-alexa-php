@@ -13,7 +13,7 @@ class SessionEndedRequest extends Request implements RequestInterface
     /**
      * @var string
      */
-    public $reason;
+    protected $reason;
 
     // Hooks
 
@@ -31,5 +31,15 @@ class SessionEndedRequest extends Request implements RequestInterface
         parent::__construct($rawData, $applicationId, $certificate, $application);
 
         $this->reason = $this->data['request']['reason'];
+    }
+
+    // Accessors
+
+    /**
+     * @return string
+     */
+    public function getReason()
+    {
+        return $this->reason;
     }
 }
