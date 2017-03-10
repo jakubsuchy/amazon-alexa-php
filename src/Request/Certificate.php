@@ -8,6 +8,7 @@
 
 namespace Alexa\Request;
 
+use Alexa\Utility\PurifierHelper;
 use Symfony\Component\Validator\Constraints as Assert;
 use RuntimeException;
 use InvalidArgumentException;
@@ -22,6 +23,10 @@ use DateTime;
  */
 class Certificate
 {
+    // Traits
+
+    use PurifierHelper;
+
     // Constants
     
     const TIMESTAMP_VALID_TOLERANCE_SECONDS = 30;
@@ -45,6 +50,11 @@ class Certificate
 
     // Fields
 
+
+    /**
+     * @var \HTMLPurifier
+     */
+    protected $purifier;
     /**
      * @var string
      *
@@ -72,9 +82,14 @@ class Certificate
     /**
      * @param string $certificateUrl
      * @param string $signature
+     * @param \HTMLPurifier|null $purifier
      */
-    public function __construct($certificateUrl, $signature)
+    public function __construct($certificateUrl, $signature, \HTMLPurifier $purifier = null)
     {
+        // Set purifier
+        $this->purifier = $purifier ?: $this->getPurifier();
+
+        // Set certificate URL and request signature
         $this->setCertificateUrl($certificateUrl);
         $this->setRequestSignature($signature);
     }

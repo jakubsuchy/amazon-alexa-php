@@ -10,6 +10,7 @@
 
 namespace Alexa\Request;
 
+use Alexa\Utility\PurifierHelper;
 use Symfony\Component\Validator\Constraints as Assert;
 
 use InvalidArgumentException;
@@ -23,11 +24,21 @@ use InvalidArgumentException;
  */
 class Application
 {
+    // Traits
+
+    use PurifierHelper;
+
     // Constants
 
     const ERROR_APPLICATION_ID_NOT_STRING = 'The provided application ID value was not a string';
     const ERROR_APPLICATION_ID_NOT_MATCHED = 'Application ID not matched';
+
     // Fields
+
+    /**
+     * @var \HTMLPurifier
+     */
+    protected $purifier;
 
     /**
      * @var array[string]
@@ -44,14 +55,24 @@ class Application
      * Application constructor.
      *
      * @param $applicationId
+     * @param \HTMLPurifier|null $purifier
      */
-    public function __construct($applicationId)
+    public function __construct($applicationId, \HTMLPurifier $purifier = null)
     {
+        // Set purifier
+        $this->purifier = $purifier ?: $this->getPurifier();
+
+        // Check application ID
         if (!is_string($applicationId)) {
             throw new \InvalidArgumentException(self::ERROR_APPLICATION_ID_NOT_STRING);
         }
 
+        // Purify
+        $applicationId = $this->purifier->purify($applicationId);
+
+        // Parse and set
         $this->setApplicationIdArray(preg_split('/,/', $applicationId));
+
     }
 
     // Public Methods

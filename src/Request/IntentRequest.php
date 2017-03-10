@@ -2,6 +2,7 @@
 
 namespace Alexa\Request;
 
+use Alexa\Utility\PurifierHelper;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -10,13 +11,24 @@ use Symfony\Component\Validator\Constraints as Assert;
  */
 class IntentRequest extends Request implements RequestInterface
 {
+    // Traits
+
+    use PurifierHelper;
+
     // Constants
 
     const KEY_SLOT_NAME = 'name';
     const KEY_SLOT_VALUE = 'value';
 
+    const ERROR_INTENT_NAME_NOT_SET = 'The intent name was not set in the request';
+    const ERROR_SLOTS_NOT_PRESENT = 'The slots array was not present in the request';
+
     // Fields
 
+    /**
+     * @var \HTMLPurifier
+     */
+    protected $purifier;
     /**
      * @var string
      *
@@ -41,17 +53,26 @@ class IntentRequest extends Request implements RequestInterface
      * @param string $applicationId - Your Alexa Dev Portal application ID
      * @param Certificate|null $certificate - Override the auto-generated Certificate with your own
      * @param Application|null $application - Override the auto-generated Application with your own
+     * @param \HTMLPurifier|null $purifier
+     *
+     * @throws \InvalidArgumentException - If the intent name or slots array is not present in the request
      */
     public function __construct(
         $rawData,
         $applicationId,
         Certificate $certificate = null,
-        Application $application = null
+        Application $application = null,
+        \HTMLPurifier $purifier = null
     ) {
         // Parent construct
-        parent::__construct($rawData, $applicationId, $certificate, $application);
+        parent::__construct($rawData, $applicationId, $certificate, $application, $purifier);
 
-        // Retrieve intent name
+        // Require intent name
+        if (!isset($this->data['request']['intent']['name'])) {
+            throw new \InvalidArgumentException(self::ERROR_INTENT_NAME_NOT_SET);
+        }
+
+        // Set intent name
         $this->setIntentName($this->data['request']['intent']['name']);
 
         // Generate $this->slots
@@ -92,7 +113,7 @@ class IntentRequest extends Request implements RequestInterface
     {
         // Short-circuit on null
         if (!isset($this->data['request']['intent']['slots'])) {
-            return;
+            throw new \InvalidArgumentException(self::ERROR_SLOTS_NOT_PRESENT);
         }
 
         // Iterate the slots, attaching each
@@ -113,7 +134,10 @@ class IntentRequest extends Request implements RequestInterface
     protected function attachSlot(array $slotDefinition)
     {
         if (isset($slotDefinition[self::KEY_SLOT_VALUE])) {
-            $this->slots[$slotDefinition[self::KEY_SLOT_NAME]] = $slotDefinition[self::KEY_SLOT_VALUE];
+            $slotKey = $this->purifier->purify($slotDefinition[self::KEY_SLOT_NAME]);
+            $slotValue = $this->purifier->purify($slotDefinition[self::KEY_SLOT_VALUE]);
+
+            $this->slots[$slotKey] = $slotValue;
         }
     }
 
@@ -142,7 +166,7 @@ class IntentRequest extends Request implements RequestInterface
      */
     public function setIntentName($intentName)
     {
-        $this->intentName = (string)$intentName;
+        $this->intentName = $this->purifier->purify((string)$intentName);
     }
 
     /**

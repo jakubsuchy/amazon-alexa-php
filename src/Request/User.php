@@ -3,6 +3,7 @@
 namespace Alexa\Request;
 
 
+use Alexa\Utility\PurifierHelper;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -14,8 +15,16 @@ use Symfony\Component\Validator\Constraints as Assert;
  */
 class User
 {
+    // Traits
+
+    use PurifierHelper;
+
     // Fields
 
+    /**
+     * @var \HTMLPurifier
+     */
+    protected $purifier;
     /**
      * @var string
      *
@@ -33,10 +42,20 @@ class User
 
     // Hooks
 
-    public function __construct($data)
+    /**
+     * User constructor.
+     *
+     * @param array $data
+     * @param \HTMLPurifier|null $purifier
+     */
+    public function __construct(array $data, \HTMLPurifier $purifier = null)
     {
-        $this->setUserId(isset($data['userId']) ? $data['userId'] : null);
-        $this->setAccessToken(isset($data['accessToken']) ? $data['accessToken'] : null);
+        // Set purifier
+        $this->purifier = $purifier ?: $this->getPurifier();
+
+        // Set fields
+        $this->setUserId($data['userId']);
+        $this->setAccessToken($data['accessToken']);
     }
 
     // Accessors
@@ -64,7 +83,7 @@ class User
      */
     public function setUserId($userId)
     {
-        $this->userId = (string)$userId;
+        $this->userId = $this->purifier->purify((string)$userId);
     }
 
     /**
@@ -72,6 +91,6 @@ class User
      */
     public function setAccessToken($accessToken)
     {
-        $this->accessToken = (string)$accessToken;
+        $this->accessToken = $this->purifier->purify((string)$accessToken);
     }
 }

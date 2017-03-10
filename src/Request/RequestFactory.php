@@ -5,6 +5,7 @@ namespace Alexa\Request;
 use Alexa\Request\Application;
 use Alexa\Request\Certificate;
 use Alexa\Request\CustomSkillRequestTypes;
+use Alexa\Utility\PurifierHelper;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 use Symfony\Component\Validator\Validation;
 use Symfony\Component\Validator\Validator\RecursiveValidator;
@@ -19,6 +20,10 @@ use Symfony\Component\Validator\ValidatorBuilder;
  */
 class RequestFactory
 {
+    // Traits
+
+    use PurifierHelper;
+
     // Constants
 
     const ERROR_INVALID_REQUEST_TYPE = 'Unknown Request Type: %s';
@@ -35,6 +40,7 @@ class RequestFactory
      * @param string $applicationId - Your application's ID (from the dev portal)
      * @param Certificate|null $certificate - Override the auto-generated Certificate with your own
      * @param Application|null $application - Override the auto-generated Application with your own
+     * @param \HTMLPurifier|null $purifier
      *
      * @return \Alexa\Request\Request
      * @throws RuntimeException
@@ -43,14 +49,18 @@ class RequestFactory
         $rawData,
         $applicationId,
         Certificate $certificate = null,
-        Application $application = null
+        Application $application = null,
+        \HTMLPurifier $purifier = null
     ) {
+        // Generate purifier
+        $purifier = $purifier ?: $this->getPurifier();
+
         // Parse data for construction
         $data = json_decode($rawData, true);
 
         // Generate base request
         /** @var Request $request */
-        $request = $this->generateRequest($data, $rawData, $applicationId, $certificate, $application);
+        $request = $this->generateRequest($data, $rawData, $applicationId, $purifier, $certificate, $application);
 
         // Validate received application ID matches client value
         $request->getApplication()->validateApplicationId($data['session']['application']['applicationId']);
@@ -75,6 +85,7 @@ class RequestFactory
      * @param array $data
      * @param $rawData
      * @param $applicationId
+     * @param \HtmlPurifier $purifier
      * @param Certificate|null $certificate - Override the auto-generated Certificate with your own
      * @param Application|null $application - Override the auto-generated Application with your own
      *
@@ -85,11 +96,12 @@ class RequestFactory
         array $data,
         $rawData,
         $applicationId,
+        \HTMLPurifier $purifier,
         $certificate,
         $application
     ) {
         // Retrieve request type
-        $requestType = $data['request']['type'];
+        $requestType = $purifier->purify($data['request']['type']);
 
         // Validate request type
         if (!in_array($requestType, array_keys(CustomSkillRequestTypes::$validTypes))) {
@@ -102,7 +114,7 @@ class RequestFactory
         $requestClass = CustomSkillRequestTypes::$validTypes[$requestType];
 
         // Generate request
-        $request = new $requestClass($rawData, $applicationId, $certificate, $application);
+        $request = new $requestClass($rawData, $applicationId, $certificate, $application, $purifier);
 
         // Return
         return $request;

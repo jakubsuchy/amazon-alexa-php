@@ -2,6 +2,7 @@
 
 namespace Alexa\Request;
 
+use Alexa\Utility\PurifierHelper;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -10,8 +11,17 @@ use Symfony\Component\Validator\Constraints as Assert;
  */
 class SessionEndedRequest extends Request implements RequestInterface
 {
+    // Traits
+
+    use PurifierHelper;
+
     // Fields
 
+
+    /**
+     * @var \HTMLPurifier
+     */
+    protected $purifier;
     /**
      * @var string
      *
@@ -29,16 +39,19 @@ class SessionEndedRequest extends Request implements RequestInterface
      * @param string $applicationId - Your Alexa Dev Portal application ID
      * @param Certificate|null $certificate - Override the auto-generated Certificate with your own
      * @param Application|null $application - Override the auto-generated Application with your own
+     * @param \HTMLPurifier|null $purifier
      */
     public function __construct(
         $rawData,
         $applicationId,
         Certificate $certificate = null,
-        Application $application = null
+        Application $application = null,
+        \HTMLPurifier $purifier = null
     ) {
         // Parent construct
-        parent::__construct($rawData, $applicationId, $certificate, $application);
+        parent::__construct($rawData, $applicationId, $certificate, $application, $purifier);
 
+        // Set reason
         $this->setReason($this->data['request']['reason']);
     }
 
@@ -59,6 +72,6 @@ class SessionEndedRequest extends Request implements RequestInterface
      */
     public function setReason($reason)
     {
-        $this->reason = (string)$reason;
+        $this->reason = $this->purifier->purify((string)$reason);
     }
 }

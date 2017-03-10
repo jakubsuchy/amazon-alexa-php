@@ -2,6 +2,7 @@
 
 namespace Alexa\Request;
 
+use Alexa\Utility\PurifierHelper;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -13,12 +14,20 @@ use Symfony\Component\Validator\Constraints as Assert;
  */
 class Session
 {
+    // Traits
+
+    use PurifierHelper;
+
     // Constants
 
     const SESSION_ID_PREFIX = 'SessionId.';
 
     // Fields
 
+    /**
+     * @var \HTMLPurifier
+     */
+    protected $purifier;
     /**
      * @var User
      *
@@ -54,14 +63,20 @@ class Session
      * Session constructor.
      *
      * @param array $data
+     * @param \HTMLPurifier|null $purifier
      */
-    public function __construct(array $data)
+    public function __construct(array $data, \HTMLPurifier $purifier = null)
     {
-        $this->setUser(new User($data['user']));
-        $this->setSessionId(isset($data['sessionId']) ? $data['sessionId'] : null);
-        $this->setNew(isset($data['new']) ? $data['new'] : false);
+        // Set purifier
+        $this->purifier = $purifier ?: $this->getPurifier();
+
+        // Set fields
+        $this->setUser(new User($data['user'], $this->purifier));
+        $this->setSessionId($data['sessionId']);
+        $this->setNew($data['new']);
 
         if (!$this->isNew() && isset($data['attributes'])) {
+            // Consumers should purify their attributes arrays
             $this->setAttributes($data['attributes']);
         }
     }
@@ -181,7 +196,7 @@ class Session
      */
     public function setSessionId($sessionId)
     {
-        $this->sessionId = (string)$sessionId;
+        $this->sessionId = $this->purifier->purify((string)$sessionId);
     }
 
     /**

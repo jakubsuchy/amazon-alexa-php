@@ -2,6 +2,7 @@
 
 namespace Alexa\Request;
 
+use Alexa\Utility\PurifierHelper;
 use Symfony\Component\Validator\Constraints as Assert;
 
 use \RuntimeException;
@@ -19,8 +20,16 @@ use Alexa\Request\Application;
  */
 abstract class Request implements RequestInterface
 {
+    // Traits
+
+    use PurifierHelper;
+
     // Fields
 
+    /**
+     * @var \HTMLPurifier
+     */
+    protected $purifier;
     /**
      * @var string
      *
@@ -89,13 +98,18 @@ abstract class Request implements RequestInterface
      * @param string $applicationId - Your Alexa Dev Portal application ID
      * @param Certificate|null $certificate - Override the auto-generated Certificate with your own
      * @param Application|null $application - Override the auto-generated Application with your own
+     * @param \HTMLPurifier|null $purifier
      */
     public function __construct(
         $rawData,
         $applicationId,
         Certificate $certificate = null,
-        Application $application = null
+        Application $application = null,
+        \HTMLPurifier $purifier = null
     ) {
+        // Set purifier
+        $this->purifier = $purifier ?: $this->getPurifier();
+
         // Check $rawData format
         if (!is_string($rawData)) {
             throw new \InvalidArgumentException('Alexa Request requires the raw JSON data '.
@@ -109,17 +123,17 @@ abstract class Request implements RequestInterface
         $this->data = json_decode($rawData, true);
 
         // Parse top-level values
-        $this->requestId = $this->data['request']['requestId'];
+        $this->setRequestId($this->data['request']['requestId']);
         $this->timestamp = new DateTime($this->data['request']['timestamp']);
-        $this->session = new Session($this->data['session']);
-        $this->applicationId = $applicationId;
+        $this->session = new Session($this->data['session'], $this->purifier);
+        $this->setApplicationId($applicationId);
 
         // Create certificate from server data if not provided
         $this->certificate = $certificate ?:
-            new Certificate($_SERVER['HTTP_SIGNATURECERTCHAINURL'], $_SERVER['HTTP_SIGNATURE']);
+            new Certificate($_SERVER['HTTP_SIGNATURECERTCHAINURL'], $_SERVER['HTTP_SIGNATURE'], $this->purifier);
 
         // Create application from ID if override not provided
-        $this->application = $application ?: new Application($applicationId);
+        $this->application = $application ?: new Application($this->applicationId, $this->purifier);
     }
 
 
@@ -196,7 +210,7 @@ abstract class Request implements RequestInterface
      */
     public function setRequestId($requestId)
     {
-        $this->requestId = (string)$requestId;
+        $this->requestId = $this->purifier->purify((string)$requestId);
     }
 
     /**
@@ -228,7 +242,7 @@ abstract class Request implements RequestInterface
      */
     public function setApplicationId($applicationId)
     {
-        $this->applicationId = (string)$applicationId;
+        $this->applicationId = $this->purifier->purify((string)$applicationId);
     }
 
     /**
