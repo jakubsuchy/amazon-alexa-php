@@ -2,22 +2,35 @@
 
 namespace Alexa\Request;
 
+use Symfony\Component\Validator\Constraints as Assert;
+
 /**
  * Class IntentRequest
  * @package Alexa\Request
  */
 class IntentRequest extends Request implements RequestInterface
 {
+    // Constants
+
+    const KEY_SLOT_NAME = 'name';
+    const KEY_SLOT_VALUE = 'value';
+
     // Fields
 
     /**
      * @var string
+     *
+     * @Assert\Type("string")
+     * @Assert\NotBlank
      */
     protected $intentName;
+
     /**
      * @var array
+     *
+     * @Assert\Type("array")
      */
-    protected $slots = array();
+    protected $slots = [];
 
     // Hooks
 
@@ -83,24 +96,24 @@ class IntentRequest extends Request implements RequestInterface
         }
 
         // Iterate the slots, attaching each
-        foreach ($this->data['request']['intent']['slots'] as $slot) {
-            $this->attachSlot($slot);
+        foreach ($this->data['request']['intent']['slots'] as $slotDefinition) {
+            $this->attachSlot($slotDefinition);
         }
     }
 
     /**
      * attachSlot()
      *
-     * Attach the data from the slot to $this->slots[$slot['name']
+     * Attach the data from the slot to $this->slots[$slotDefinition[self::KEY_SLOT_NAME]
      *
-     * @param array $slot
+     * @param array $slotDefinition
      *
      * @return void
      */
-    protected function attachSlot(array $slot)
+    protected function attachSlot(array $slotDefinition)
     {
-        if (isset($slot['value'])) {
-            $this->slots[$slot['name']] = $slot['value'];
+        if (isset($slotDefinition[self::KEY_SLOT_VALUE])) {
+            $this->slots[$slotDefinition[self::KEY_SLOT_NAME]] = $slotDefinition[self::KEY_SLOT_VALUE];
         }
     }
 
@@ -129,13 +142,13 @@ class IntentRequest extends Request implements RequestInterface
      */
     public function setIntentName($intentName)
     {
-        $this->intentName = $intentName;
+        $this->intentName = (string)$intentName;
     }
 
     /**
      * @param array $slots
      */
-    public function setSlots($slots)
+    public function setSlots(array $slots)
     {
         $this->slots = $slots;
     }

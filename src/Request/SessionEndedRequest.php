@@ -2,6 +2,8 @@
 
 namespace Alexa\Request;
 
+use Symfony\Component\Validator\Constraints as Assert;
+
 /**
  * Class SessionEndedRequest
  * @package Alexa\Request
@@ -12,6 +14,9 @@ class SessionEndedRequest extends Request implements RequestInterface
 
     /**
      * @var string
+     *
+     * @Assert\Type("string")
+     * @Assert\NotBlank
      */
     protected $reason;
 
@@ -54,6 +59,6 @@ class SessionEndedRequest extends Request implements RequestInterface
      */
     public function setReason($reason)
     {
-        $this->reason = $reason;
+        $this->reason = (string)$reason;
     }
 }

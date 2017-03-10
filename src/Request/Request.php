@@ -2,6 +2,8 @@
 
 namespace Alexa\Request;
 
+use Symfony\Component\Validator\Constraints as Assert;
+
 use \RuntimeException;
 use \DateTime;
 
@@ -21,36 +23,60 @@ abstract class Request implements RequestInterface
 
     /**
      * @var string
+     *
+     * @Assert\Type("string")
+     * @Assert\NotBlank
      */
     protected $requestId;
     /**
      * @var DateTime
+     *
+     * @Assert\DateTime
+     * @Assert\NotBlank
      */
     protected $timestamp;
     /**
-     * @var Session
-     */
-    protected $session;
-    /**
      * @var array
+     *
+     * @Assert\Type("array")
+     * @Assert\NotBlank
      */
     protected $data;
     /**
      * @var string
+     *
+     * @Assert\Type("string")
+     * @Assert\NotBlank
      */
     protected $rawData;
     /**
      * @var string
+     *
+     * @Assert\Type("string")
+     * @Assert\NotBlank
      */
     protected $applicationId;
     /**
      * @var \Alexa\Request\Certificate
+     *
+     * @Assert\Type("\Alexa\Request\Certificate")
+     * @Assert\NotBlank
      */
     protected $certificate;
     /**
      * @var \Alexa\Request\Application
+     *
+     * @Assert\Type("\Alexa\Request\Application")
+     * @Assert\NotBlank
      */
     protected $application;
+    /**
+     * @var Session
+     *
+     * @Assert\Type("\Alexa\Request\Session")
+     * @Assert\NotBlank
+     */
+    protected $session;
 
     // Hooks
 
@@ -116,14 +142,6 @@ abstract class Request implements RequestInterface
     }
 
     /**
-     * @return Session
-     */
-    public function getSession()
-    {
-        return $this->session;
-    }
-
-    /**
      * @return array
      */
     public function getData()
@@ -163,6 +181,14 @@ abstract class Request implements RequestInterface
         return $this->application;
     }
 
+    /**
+     * @return Session
+     */
+    public function getSession()
+    {
+        return $this->session;
+    }
+
     // Mutators
 
     /**
@@ -170,29 +196,21 @@ abstract class Request implements RequestInterface
      */
     public function setRequestId($requestId)
     {
-        $this->requestId = $requestId;
+        $this->requestId = (string)$requestId;
     }
 
     /**
      * @param DateTime $timestamp
      */
-    public function setTimestamp($timestamp)
+    public function setTimestamp(\DateTime $timestamp)
     {
         $this->timestamp = $timestamp;
     }
 
     /**
-     * @param Session $session
-     */
-    public function setSession($session)
-    {
-        $this->session = $session;
-    }
-
-    /**
      * @param array $data
      */
-    public function setData($data)
+    public function setData(array $data)
     {
         $this->data = $data;
     }
@@ -202,7 +220,7 @@ abstract class Request implements RequestInterface
      */
     public function setRawData($rawData)
     {
-        $this->rawData = $rawData;
+        $this->rawData = (string)$rawData;
     }
 
     /**
@@ -210,13 +228,13 @@ abstract class Request implements RequestInterface
      */
     public function setApplicationId($applicationId)
     {
-        $this->applicationId = $applicationId;
+        $this->applicationId = (string)$applicationId;
     }
 
     /**
      * @param \Alexa\Request\Certificate $certificate
      */
-    public function setCertificate($certificate)
+    public function setCertificate(Certificate $certificate)
     {
         $this->certificate = $certificate;
     }
@@ -224,8 +242,16 @@ abstract class Request implements RequestInterface
     /**
      * @param \Alexa\Request\Application $application
      */
-    public function setApplication($application)
+    public function setApplication(Application $application)
     {
         $this->application = $application;
+    }
+
+    /**
+     * @param Session $session
+     */
+    public function setSession(Session $session)
+    {
+        $this->session = $session;
     }
 }

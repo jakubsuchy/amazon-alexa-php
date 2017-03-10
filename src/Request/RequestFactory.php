@@ -5,6 +5,10 @@ namespace Alexa\Request;
 use Alexa\Request\Application;
 use Alexa\Request\Certificate;
 use Alexa\Request\CustomSkillRequestTypes;
+use Symfony\Component\Validator\ConstraintViolationListInterface;
+use Symfony\Component\Validator\Validation;
+use Symfony\Component\Validator\Validator\RecursiveValidator;
+use Symfony\Component\Validator\ValidatorBuilder;
 
 /**
  * Class RequestFactory
@@ -18,6 +22,7 @@ class RequestFactory
     // Constants
 
     const ERROR_INVALID_REQUEST_TYPE = 'Unknown Request Type: %s';
+    const ERROR_VALIDATION_FAILED = 'Validation failed! Errors: %s';
 
     // Factory
 
@@ -52,6 +57,9 @@ class RequestFactory
 
         // Validate that the request signature matches the certificate
         $request->getCertificate()->validateRequest($rawData);
+
+        // Perform Doctrine validation
+        $this->validateRequest($request);
 
         // Return complete request
         return $request;
@@ -98,5 +106,35 @@ class RequestFactory
 
         // Return
         return $request;
+    }
+
+    /**
+     * validateRequest()
+     *
+     * Perform Doctrine validation on the entity
+     *
+     * @param RequestInterface $request
+     *
+     * @throws \InvalidArgumentException
+     */
+    protected function validateRequest(RequestInterface $request)
+    {
+        // Retrieve validator
+        $validator = Validation::createValidatorBuilder()
+            ->enableAnnotationMapping()
+            ->getValidator();
+
+        // Perform validation
+        /** @var ConstraintViolationListInterface $errors */
+        $errors = $validator->validate($request);
+
+        // Build exception and throw if there were errors
+        if ($errors->count()) {
+            $errorString = (string) $errors;
+
+            throw new \InvalidArgumentException(
+                sprintf(self::ERROR_VALIDATION_FAILED, $errorString)
+            );
+        }
     }
 }

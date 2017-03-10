@@ -2,6 +2,9 @@
 
 namespace Alexa\Request;
 
+
+use Symfony\Component\Validator\Constraints as Assert;
+
 /**
  * Class User
  *
@@ -15,10 +18,16 @@ class User
 
     /**
      * @var string
+     *
+     * @Assert\Type("string")
+     * @Assert\NotBlank
      */
     protected $userId;
     /**
      * @var string
+     *
+     * @Assert\Type("string")
+     * @Assert\NotBlank
      */
     protected $accessToken;
 
@@ -26,8 +35,8 @@ class User
 
     public function __construct($data)
     {
-        $this->userId = isset($data['userId']) ? $data['userId'] : null;
-        $this->accessToken = isset($data['accessToken']) ? $data['accessToken'] : null;
+        $this->setUserId(isset($data['userId']) ? $data['userId'] : null);
+        $this->setAccessToken(isset($data['accessToken']) ? $data['accessToken'] : null);
     }
 
     // Accessors
@@ -55,7 +64,7 @@ class User
      */
     public function setUserId($userId)
     {
-        $this->userId = $userId;
+        $this->userId = (string)$userId;
     }
 
     /**
@@ -63,6 +72,6 @@ class User
      */
     public function setAccessToken($accessToken)
     {
-        $this->accessToken = $accessToken;
+        $this->accessToken = (string)$accessToken;
     }
 }

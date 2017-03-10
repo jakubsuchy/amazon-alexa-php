@@ -10,6 +10,8 @@
 
 namespace Alexa\Request;
 
+use Symfony\Component\Validator\Constraints as Assert;
+
 use InvalidArgumentException;
 
 /**
@@ -21,17 +23,19 @@ use InvalidArgumentException;
  */
 class Application
 {
+    // Constants
+
+    const ERROR_APPLICATION_ID_NOT_STRING = 'The provided application ID value was not a string';
+    const ERROR_APPLICATION_ID_NOT_MATCHED = 'Application ID not matched';
     // Fields
 
     /**
-     * @var array
+     * @var array[string]
+     *
+     * @Assert\Type("array")
+     * @Assert\NotBlank
      */
     protected $applicationIdArray;
-
-    /**
-     * @var string
-     */
-    protected $requestApplicationId;
 
 
     // Hooks
@@ -43,6 +47,10 @@ class Application
      */
     public function __construct($applicationId)
     {
+        if (!is_string($applicationId)) {
+            throw new \InvalidArgumentException(self::ERROR_APPLICATION_ID_NOT_STRING);
+        }
+
         $this->setApplicationIdArray(preg_split('/,/', $applicationId));
     }
 
@@ -54,14 +62,10 @@ class Application
      * @param string $requestApplicationId - Application ID from the Request
      *                               (typically found in $data['session']['application']
      */
-    public function validateApplicationId($requestApplicationId = "")
+    public function validateApplicationId($requestApplicationId)
     {
-        if (empty($requestApplicationId)) {
-            $requestApplicationId = $this->requestApplicationId;
-        }
-
         if (!in_array($requestApplicationId, $this->applicationIdArray)) {
-            throw new InvalidArgumentException('Application Id not matched');
+            throw new InvalidArgumentException(self::ERROR_APPLICATION_ID_NOT_MATCHED);
         }
     }
 
@@ -75,14 +79,6 @@ class Application
         return $this->applicationIdArray;
     }
 
-    /**
-     * @return mixed
-     */
-    public function getRequestApplicationId()
-    {
-        return $this->requestApplicationId;
-    }
-
     // Mutators
 
     /**
@@ -91,13 +87,5 @@ class Application
     public function setApplicationIdArray(array $applicationIdArray)
     {
         $this->applicationIdArray = $applicationIdArray;
-    }
-
-    /**
-     * @param string $requestApplicationId
-     */
-    public function setRequestApplicationId($requestApplicationId)
-    {
-        $this->requestApplicationId = $requestApplicationId;
     }
 }

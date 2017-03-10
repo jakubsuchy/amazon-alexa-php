@@ -2,6 +2,8 @@
 
 namespace Alexa\Request;
 
+use Symfony\Component\Validator\Constraints as Assert;
+
 /**
  * Class Session
  *
@@ -11,57 +13,83 @@ namespace Alexa\Request;
  */
 class Session
 {
+    // Constants
+
+    const SESSION_ID_PREFIX = 'SessionId.';
+
     // Fields
 
+    /**
+     * @var User
+     *
+     * @Assert\Type("\Alexa\Request\User")
+     * @Assert\NotBlank
+     */
     protected $user;
+    /**
+     * @var bool
+     *
+     * @Assert\Type("bool")
+     * @Assert\NotNull
+     */
     protected $new;
-    protected $application;
+    /**
+     * @var string
+     *
+     * @Assert\Type("string")
+     * @Assert\NotBlank
+     */
     protected $sessionId;
+    /**
+     * @var array
+     *
+     * @Assert\Type("array")
+     * @Assert\NotBlank
+     */
     protected $attributes = [];
 
     // Hooks
 
-    public function __construct($data)
+    /**
+     * Session constructor.
+     *
+     * @param array $data
+     */
+    public function __construct(array $data)
     {
-        $this->user = new User($data['user']);
-        $this->sessionId = isset($data['sessionId']) ? $data['sessionId'] : null;
-        $this->new = isset($data['new']) ? $data['new'] : null;
-        if (!$this->new && isset($data['attributes'])) {
-                $this->attributes = $data['attributes'];
+        $this->setUser(new User($data['user']));
+        $this->setSessionId(isset($data['sessionId']) ? $data['sessionId'] : null);
+        $this->setNew(isset($data['new']) ? $data['new'] : false);
+
+        if (!$this->isNew() && isset($data['attributes'])) {
+            $this->setAttributes($data['attributes']);
         }
     }
 
     // Public Methods
 
     /**
-    * Remove "SessionId." prefix from the send session id, as it's invalid
-    * as a session id (at least for default session, on file).
-    * @param type $sessionId
-    * @return type
-    */
-    protected function parseSessionId($sessionId)
+     * openPhpSession()
+     *
+     * Open PHP SESSION using amazon provided sessionId, for storing data about the session.
+     * Session cookie won't be sent.
+     */
+    public function openPhpSession()
     {
-        $prefix = 'SessionId.';
-        if (substr($sessionId, 0, strlen($prefix)) == $prefix) {
-            return substr($sessionId, strlen($prefix));
-        } else {
-            return $sessionId;
-        }
-    }
-       
-    /**
-    * Open PHP SESSION using amazon provided sessionId, for storing data about the session.
-    * Session cookie won't be sent.
-    */
-    public function openSession()
-    {
-        ini_set('session.use_cookies', 0); # disable session cookies
+        // Disable session cookies
+        ini_set('session.use_cookies', 0);
+
+        // Start session
         session_id($this->parseSessionId($this->sessionId));
+
         return session_start();
     }
-       
+
     /**
+     * getAttribute()
+     *
     * Returns attribute value of $default.
+     *
     * @param string $key
     * @param mixed $default
     * @return mixed
@@ -70,9 +98,30 @@ class Session
     {
         if (array_key_exists($key, $this->attributes)) {
             return $this->attributes[$key];
-        } else {
-            return $default;
         }
+
+        return $default;
+    }
+
+    // Protected Methods
+
+    /**
+     * parseSessionId()
+     *
+     * Remove "SessionId." prefix from the send session id, as it's invalid
+     * as a session ID (at least for default session, on file)
+     *
+     * @param string $sessionId
+     *
+     * @return string
+     */
+    protected function parseSessionId($sessionId)
+    {
+        if (substr($sessionId, 0, strlen(self::SESSION_ID_PREFIX)) === self::SESSION_ID_PREFIX) {
+            return substr($sessionId, strlen(self::SESSION_ID_PREFIX));
+        }
+
+        return $sessionId;
     }
 
     // Accessors
@@ -86,23 +135,15 @@ class Session
     }
 
     /**
-     * @return null
+     * @return bool
      */
-    public function getNew()
+    public function isNew()
     {
         return $this->new;
     }
 
     /**
-     * @return Application
-     */
-    public function getApplication()
-    {
-        return $this->application;
-    }
-
-    /**
-     * @return null
+     * @return string
      */
     public function getSessionId()
     {
@@ -122,25 +163,17 @@ class Session
     /**
      * @param User $user
      */
-    public function setUser($user)
+    public function setUser(User $user)
     {
         $this->user = $user;
     }
 
     /**
-     * @param null $new
+     * @param bool $new
      */
     public function setNew($new)
     {
-        $this->new = $new;
-    }
-
-    /**
-     * @param mixed $application
-     */
-    public function setApplication($application)
-    {
-        $this->application = $application;
+        $this->new = (bool)$new;
     }
 
     /**
@@ -148,13 +181,13 @@ class Session
      */
     public function setSessionId($sessionId)
     {
-        $this->sessionId = $sessionId;
+        $this->sessionId = (string)$sessionId;
     }
 
     /**
      * @param array $attributes
      */
-    public function setAttributes($attributes)
+    public function setAttributes(array $attributes)
     {
         $this->attributes = $attributes;
     }
