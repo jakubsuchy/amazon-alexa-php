@@ -2,61 +2,193 @@
 
 namespace Alexa\Request;
 
-class Session {
-        /** @var User */
-	public $user;
-	public $new;
-        /** @var Application */
-        public $application;
-        public $sessionId;
-        public $attributes = array();
+use Symfony\Component\Validator\Constraints as Assert;
 
-	public function __construct($data) {
-		$this->user = new User($data['user']);
-		$this->sessionId = isset($data['sessionId']) ? $data['sessionId'] : null;
-                $this->new = isset($data['new']) ? $data['new'] : null;
-                if(!$this->new && isset($data['attributes'])) {
-                        $this->attributes = $data['attributes'];
-                }
-	}
-        
-        /**
-         * Remove "SessionId." prefix from the send session id, as it's invalid
-         * as a session id (at least for default session, on file).
-         * @param type $sessionId
-         * @return type
-         */
-        protected function parseSessionId($sessionId) {
-                $prefix = 'SessionId.';
-                if (substr($sessionId, 0, strlen($prefix)) == $prefix) {
-                        return substr($sessionId, strlen($prefix));
-                } else {
-                        return $sessionId;
-                }
+/**
+ * Class Session
+ *
+ * Encapsulate an Alexa session
+ *
+ * @package Alexa\Request
+ */
+class Session
+{
+    // Constants
+
+    const SESSION_ID_PREFIX = 'SessionId.';
+
+    // Fields
+
+    /**
+     * @var User
+     *
+     * @Assert\Type("\Alexa\Request\User")
+     * @Assert\NotBlank
+     */
+    protected $user;
+    /**
+     * @var bool
+     *
+     * @Assert\Type("bool")
+     * @Assert\NotNull
+     */
+    protected $new;
+    /**
+     * @var string
+     *
+     * @Assert\Type("string")
+     * @Assert\NotBlank
+     */
+    protected $sessionId;
+    /**
+     * @var array
+     *
+     * @Assert\Type("array")
+     * @Assert\NotBlank
+     */
+    protected $attributes = [];
+
+    // Hooks
+
+    /**
+     * Session constructor.
+     *
+     * @param array $data
+     */
+    public function __construct(array $data)
+    {
+        $this->setUser(new User($data['user']));
+        $this->setSessionId(isset($data['sessionId']) ? $data['sessionId'] : null);
+        $this->setNew(isset($data['new']) ? $data['new'] : false);
+
+        if (!$this->isNew() && isset($data['attributes'])) {
+            $this->setAttributes($data['attributes']);
         }
-        
-        /**
-         * Open PHP SESSION using amazon provided sessionId, for storing data about the session.
-         * Session cookie won't be sent.
-         */
-        public function openSession() {
-                ini_set('session.use_cookies', 0); # disable session cookies
-                session_id($this->parseSessionId($this->sessionId));
-                return session_start();
-        }
-        
-        /**
-         * Returns attribute value of $default.
-         * @param string $key
-         * @param mixed $default
-         * @return mixed
-         */
-        public function getAttribute($key, $default = false) {
-                if(array_key_exists($key, $this->attributes)) {
-                        return $this->attributes[$key];
-                } else {
-                        return $default;
-                }
+    }
+
+    // Public Methods
+
+    /**
+     * openPhpSession()
+     *
+     * Open PHP SESSION using amazon provided sessionId, for storing data about the session.
+     * Session cookie won't be sent.
+     */
+    public function openPhpSession()
+    {
+        // Disable session cookies
+        ini_set('session.use_cookies', 0);
+
+        // Start session
+        session_id($this->parseSessionId($this->sessionId));
+
+        return session_start();
+    }
+
+    /**
+     * getAttribute()
+     *
+    * Returns attribute value of $default.
+     *
+    * @param string $key
+    * @param mixed $default
+    * @return mixed
+    */
+    public function getAttribute($key, $default = false)
+    {
+        if (array_key_exists($key, $this->attributes)) {
+            return $this->attributes[$key];
         }
 
+        return $default;
+    }
+
+    // Protected Methods
+
+    /**
+     * parseSessionId()
+     *
+     * Remove "SessionId." prefix from the send session id, as it's invalid
+     * as a session ID (at least for default session, on file)
+     *
+     * @param string $sessionId
+     *
+     * @return string
+     */
+    protected function parseSessionId($sessionId)
+    {
+        if (substr($sessionId, 0, strlen(self::SESSION_ID_PREFIX)) === self::SESSION_ID_PREFIX) {
+            return substr($sessionId, strlen(self::SESSION_ID_PREFIX));
+        }
+
+        return $sessionId;
+    }
+
+    // Accessors
+
+    /**
+     * @return User
+     */
+    public function getUser()
+    {
+        return $this->user;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isNew()
+    {
+        return $this->new;
+    }
+
+    /**
+     * @return string
+     */
+    public function getSessionId()
+    {
+        return $this->sessionId;
+    }
+
+    /**
+     * @return array
+     */
+    public function getAttributes()
+    {
+        return $this->attributes;
+    }
+
+    // Mutators
+
+    /**
+     * @param User $user
+     */
+    public function setUser(User $user)
+    {
+        $this->user = $user;
+    }
+
+    /**
+     * @param bool $new
+     */
+    public function setNew($new)
+    {
+        $this->new = (bool)$new;
+    }
+
+    /**
+     * @param null $sessionId
+     */
+    public function setSessionId($sessionId)
+    {
+        $this->sessionId = (string)$sessionId;
+    }
+
+    /**
+     * @param array $attributes
+     */
+    public function setAttributes(array $attributes)
+    {
+        $this->attributes = $attributes;
+    }
 }
