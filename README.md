@@ -16,7 +16,7 @@ You can get the `JSON` body of the request like so:
 $applicationId = "your-application-id-from-alexa"; // See developer.amazon.com and your Application. Will start with "amzn1.echo-sdk-ams.app."
 $rawRequest = $request->getContent(); // This is how you would retrieve this with Laravel or Symfony 2.
 $alexaRequestFactory = new \Alexa\Request\RequestFactory();
-$alexaRequest = $alexaRequestFactory->fromRawData($rawRequest, $applicationId);
+$alexaRequest = $alexaRequestFactory->fromRawData($rawRequest, [$applicationId]);
 ```
 
 The library expect raw request data, not parsed JSON as it needs to validate the request signature.
