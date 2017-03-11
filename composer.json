@@ -1,6 +1,6 @@
 {
     "name": "froodley/amazon-alexa-php",
-    "description": "Amazon Alexa interface for PHP",
+    "description": "Amazon Alexa interface for PHP - XSS Filtering, Improved Testability",
     "license": "MIT",
     "type": "library",
     "authors": [

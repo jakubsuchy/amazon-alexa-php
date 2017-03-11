@@ -4,6 +4,9 @@ This library provides provides a convenient interface for developing Amazon Alex
 
 It represents a breaking change (and is forked) from jakobsuchy/amazon-alexa-php
 
+The most important changes are the addition of XSS purification and some basic Doctrine validation, and making
+ everything stateless, SRP and more testable
+
 ## Usage
 
 Install via composer: `composer require froodley/amazon-alexa-php`
