@@ -216,17 +216,17 @@ class Response
         }
 
         if ($this->getOutputSpeech()) {
-            $outputArray['response']['outputSpeech'] = $this->getOutputSpeech();
+            $outputArray['response']['outputSpeech'] = $this->getOutputSpeech()->render();
         }
 
 
         if ($this->getCard()) {
-            $outputArray['response']['card'] = $this->getCard();
+            $outputArray['response']['card'] = $this->getCard()->render();
         }
 
 
         if ($this->getReprompt()) {
-            $outputArray['response']['reprompt'] = $this->getReprompt();
+            $outputArray['response']['reprompt'] = $this->getReprompt()->render();
         }
 
         // Return
