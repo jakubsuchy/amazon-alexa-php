@@ -96,19 +96,59 @@ class Response
     }
 
     /**
-     * Add card information
+     * withCard()
+     *
+     * Create a SimpleCard
      *
      * @param string $title
      * @param string $content
      *
      * @return \Alexa\Response\Response
      */
-    public function withCard($title, $content = '')
+    public function withCard($title, $content)
     {
         $this->card = new Card;
         $this->card->setTitle($title);
-        $this->card->setContent($content);
+        $this->card->setSimpleCardContent($content);
         
+        return $this;
+    }
+
+    /**
+     * withStandardCard()
+     *
+     * Create a StandardCard with image URLs
+     *
+     * @param string $title
+     * @param $cardText
+     * @param $smallImageUrl
+     * @param $largeImageUrl
+     *
+     * @return Response
+     */
+    public function withStandardCard($title, $cardText, $smallImageUrl, $largeImageUrl)
+    {
+        $this->card = new Card;
+        $this->card->setTitle($title);
+        $this->card->setStandardCardText($cardText);
+        $this->card->setSmallImageUrl($smallImageUrl);
+        $this->card->setLargeImageUrl($largeImageUrl);
+
+        return $this;
+    }
+
+    /**
+     * withLinkAccountCard()
+     *
+     * Create a LinkAccount card
+     *
+     * @return Response
+     */
+    public function withLinkAccountCard()
+    {
+        $this->card = new Card;
+        $this->card->setType(Card::CARD_TYPE_LINK_ACCOUNT);
+
         return $this;
     }
 

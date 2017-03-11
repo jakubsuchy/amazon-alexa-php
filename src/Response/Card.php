@@ -11,11 +11,50 @@ namespace Alexa\Response;
  */
 class Card
 {
+    // Constants
+
+    const CARD_TYPE_SIMPLE = 'Simple';
+    const CARD_TYPE_STANDARD = 'Standard';
+    const CARD_TYPE_LINK_ACCOUNT = 'LinkAccount';
+
+    const ERROR_INVALID_CARD_TYPE = 'The card type \'%s\' is not one of the valid options';
+
     // Fields
 
-    protected $type = 'Simple';
-    protected $title = '';
-    protected $content = '';
+    /**
+     * @var array
+     */
+    public static $validCardTypes = [
+        self::CARD_TYPE_SIMPLE,
+        self::CARD_TYPE_STANDARD,
+        self::CARD_TYPE_LINK_ACCOUNT
+    ];
+
+    /**
+     * @var string
+     */
+    protected $type;
+    /**
+     * @var string
+     */
+    protected $title;
+    /**
+     * @var string
+     */
+    protected $simpleCardContent;
+    /**
+     * @var string
+     */
+    protected $standardCardText;
+    /**
+     * @var string
+     */
+    protected $smallImageUrl;
+    /**
+     * @var string
+     */
+    protected $largeImageUrl;
+
 
     // Public Methods
 
@@ -24,11 +63,36 @@ class Card
      */
     public function render()
     {
-        return [
-            'type' => $this->type,
-            'title' => $this->title,
-            'content' => $this->content,
-        ];
+        $cardType = $this->getType();
+
+        switch ($cardType) {
+            case self::CARD_TYPE_SIMPLE:
+                return [
+                    'type' => $cardType,
+                    'title' => $this->getTitle(),
+                    'content' => $this->getSimpleCardContent()
+                ];
+            case self::CARD_TYPE_STANDARD:
+                return [
+                    'type' => $cardType,
+                    'title' => $this->getTitle(),
+                    'text' => $this->getStandardCardText(),
+                    'image' => [
+                        'smallImageUrl' => $this->getSmallImageUrl(),
+                        'largeImageUrl' => $this->getLargeImageUrl()
+                    ]
+                ];
+            case self::CARD_TYPE_LINK_ACCOUNT:
+                return [
+                    'type' => $cardType
+                ];
+            default:
+                throw new \InvalidArgumentException(
+                    sprintf(self::ERROR_INVALID_CARD_TYPE, $cardType)
+                );
+        }
+
+
     }
 
     // Accessors
@@ -52,19 +116,51 @@ class Card
     /**
      * @return string
      */
-    public function getContent()
+    public function getSimpleCardContent()
     {
-        return $this->content;
+        return $this->simpleCardContent;
+    }
+
+    /**
+     * @return string
+     */
+    public function getStandardCardText()
+    {
+        return $this->standardCardText;
+    }
+
+    /**
+     * @return string
+     */
+    public function getSmallImageUrl()
+    {
+        return $this->smallImageUrl;
+    }
+
+    /**
+     * @return string
+     */
+    public function getLargeImageUrl()
+    {
+        return $this->largeImageUrl;
     }
 
     // Mutators
 
     /**
      * @param string $type
+     *
+     * @throws \InvalidArgumentException - If the card type is not in self::$validCardTypes
      */
     public function setType($type)
     {
-        $this->type = $type;
+        if (!in_array($type, self::$validCardTypes)) {
+            throw new \InvalidArgumentException(
+                sprintf(self::ERROR_INVALID_CARD_TYPE, $type)
+            );
+        }
+
+        $this->type = (string)$type;
     }
 
     /**
@@ -72,14 +168,38 @@ class Card
      */
     public function setTitle($title)
     {
-        $this->title = $title;
+        $this->title = (string)$title;
     }
 
     /**
      * @param string $content
      */
-    public function setContent($content)
+    public function setSimpleCardContent($content)
     {
-        $this->content = $content;
+        $this->simpleCardContent = (string)$content;
+    }
+
+    /**
+     * @param string $standardCardText
+     */
+    public function setStandardCardText($standardCardText)
+    {
+        $this->standardCardText = (string)$standardCardText;
+    }
+
+    /**
+     * @param string $smallImageUrl
+     */
+    public function setSmallImageUrl($smallImageUrl)
+    {
+        $this->smallImageUrl = (string)$smallImageUrl;
+    }
+
+    /**
+     * @param string $largeImageUrl
+     */
+    public function setLargeImageUrl($largeImageUrl)
+    {
+        $this->largeImageUrl = (string)$largeImageUrl;
     }
 }

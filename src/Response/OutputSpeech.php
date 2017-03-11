@@ -16,7 +16,17 @@ class OutputSpeech
     const TYPE_TEXT = 'PlainText';
     const TYPE_SSML = 'SSML';
 
+    const ERROR_INVALID_SPEECH_TYPE = 'The provided speech type \'%s\' is not one of the valid options.';
+
     // Fields
+
+    /**
+     * @var array
+     */
+    public static $validSpeechTypes = [
+        self::TYPE_TEXT,
+        self::TYPE_SSML
+    ];
 
     /**
      * @var string
@@ -38,17 +48,23 @@ class OutputSpeech
      */
     public function render()
     {
-        switch($this->type) {
+        $speechType = $this->getType();
+
+        switch($speechType) {
             case self::TYPE_TEXT:
                 return [
-                    'type' => $this->type,
-                    'text' => $this->text
+                    'type' => $this->getType(),
+                    'text' => $this->getText()
                 ];
             case self::TYPE_SSML:
                 return [
-                    'type' => $this->type,
-                    'ssml' => $this->ssml
+                    'type' => $this->getType(),
+                    'ssml' => $this->getSsml()
                 ];
+            default:
+                throw new \InvalidArgumentException(
+                    sprintf(self::ERROR_INVALID_SPEECH_TYPE, $speechType)
+                );
         }
     }
 
@@ -82,10 +98,18 @@ class OutputSpeech
 
     /**
      * @param string $type
+     *
+     * @throws \InvalidArgumentException - If the speech type is not in self::$validSpeechTypes
      */
     public function setType($type)
     {
-        $this->type = $type;
+        if (!in_array($type, self::$validSpeechTypes)) {
+            throw new \InvalidArgumentException(
+                sprintf(self::ERROR_INVALID_SPEECH_TYPE, $type)
+            );
+        }
+
+        $this->type = (string)$type;
     }
 
     /**
@@ -93,7 +117,7 @@ class OutputSpeech
      */
     public function setText($text)
     {
-        $this->text = $text;
+        $this->text = (string)$text;
     }
 
     /**
@@ -101,6 +125,6 @@ class OutputSpeech
      */
     public function setSsml($ssml)
     {
-        $this->ssml = $ssml;
+        $this->ssml = (string)$ssml;
     }
 }
