@@ -168,15 +168,15 @@ class Card
      */
     public function setTitle($title)
     {
-        $this->title = (string)$title;
+        $this->title = $title ? (string)$title : null;
     }
 
     /**
-     * @param string $content
+     * @param string $simpleCardContent
      */
-    public function setSimpleCardContent($content)
+    public function setSimpleCardContent($simpleCardContent)
     {
-        $this->simpleCardContent = (string)$content;
+        $this->simpleCardContent = $simpleCardContent ? (string)$simpleCardContent : null;
     }
 
     /**
@@ -184,7 +184,7 @@ class Card
      */
     public function setStandardCardText($standardCardText)
     {
-        $this->standardCardText = (string)$standardCardText;
+        $this->standardCardText = $standardCardText ? (string)$standardCardText : null;
     }
 
     /**
@@ -192,7 +192,7 @@ class Card
      */
     public function setSmallImageUrl($smallImageUrl)
     {
-        $this->smallImageUrl = (string)$smallImageUrl;
+        $this->smallImageUrl = $smallImageUrl ? (string)$smallImageUrl : null;
     }
 
     /**
@@ -200,6 +200,6 @@ class Card
      */
     public function setLargeImageUrl($largeImageUrl)
     {
-        $this->largeImageUrl = (string)$largeImageUrl;
+        $this->largeImageUrl = $largeImageUrl ? (string)$largeImageUrl : null;
     }
 }

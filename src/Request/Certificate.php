@@ -334,7 +334,7 @@ class Certificate
      */
     public function setCertificateUrl($certificateUrl)
     {
-        $this->certificateUrl = (string)$certificateUrl;
+        $this->certificateUrl = $certificateUrl ? (string)$certificateUrl : null;
     }
 
     /**
@@ -342,7 +342,7 @@ class Certificate
      */
     public function setRequestSignature($requestSignature)
     {
-        $this->requestSignature = (string)$requestSignature;
+        $this->requestSignature = $requestSignature ? (string)$requestSignature : null;
     }
 
     /**
@@ -350,6 +350,6 @@ class Certificate
      */
     public function setCertificateContent($certificateContent)
     {
-        $this->certificateContent = (string)$certificateContent;
+        $this->certificateContent = $certificateContent ? (string)$certificateContent : null;
     }
 }

@@ -117,7 +117,7 @@ class OutputSpeech
      */
     public function setText($text)
     {
-        $this->text = (string)$text;
+        $this->text = $text ? (string)$text : null;
     }
 
     /**
@@ -125,6 +125,6 @@ class OutputSpeech
      */
     public function setSsml($ssml)
     {
-        $this->ssml = (string)$ssml;
+        $this->ssml = $ssml ? (string)$ssml : null;
     }
 }

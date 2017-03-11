@@ -251,7 +251,7 @@ class Response
      */
     public function setVersion($version)
     {
-        $this->version = $version;
+        $this->version = $version ? (string)$version : null;
     }
 
     /**

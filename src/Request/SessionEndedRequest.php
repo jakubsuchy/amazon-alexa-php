@@ -72,6 +72,6 @@ class SessionEndedRequest extends Request implements RequestInterface
      */
     public function setReason($reason)
     {
-        $this->reason = $this->purifier->purify((string)$reason);
+        $this->reason = $reason ? $this->purifier->purify((string)$reason) : null;
     }
 }

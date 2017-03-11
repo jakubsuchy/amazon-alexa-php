@@ -210,7 +210,7 @@ abstract class Request implements RequestInterface
      */
     public function setRequestId($requestId)
     {
-        $this->requestId = $this->purifier->purify((string)$requestId);
+        $this->requestId = $requestId ? $this->purifier->purify((string)$requestId) : null;
     }
 
     /**
@@ -234,7 +234,7 @@ abstract class Request implements RequestInterface
      */
     public function setRawData($rawData)
     {
-        $this->rawData = (string)$rawData;
+        $this->rawData = $rawData ? (string)$rawData : null;
     }
 
     /**
@@ -242,7 +242,7 @@ abstract class Request implements RequestInterface
      */
     public function setApplicationId($applicationId)
     {
-        $this->applicationId = $this->purifier->purify((string)$applicationId);
+        $this->applicationId = $applicationId ? $this->purifier->purify((string)$applicationId) : null;
     }
 
     /**

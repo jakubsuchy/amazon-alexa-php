@@ -83,7 +83,7 @@ class User
      */
     public function setUserId($userId)
     {
-        $this->userId = $this->purifier->purify((string)$userId);
+        $this->userId = $userId ? $this->purifier->purify((string)$userId) : null;
     }
 
     /**
@@ -91,6 +91,6 @@ class User
      */
     public function setAccessToken($accessToken)
     {
-        $this->accessToken = $this->purifier->purify((string)$accessToken);
+        $this->accessToken = $accessToken ? $this->purifier->purify((string)$accessToken) : null;
     }
 }

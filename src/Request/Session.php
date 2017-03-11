@@ -196,7 +196,7 @@ class Session
      */
     public function setSessionId($sessionId)
     {
-        $this->sessionId = $this->purifier->purify((string)$sessionId);
+        $this->sessionId = $sessionId ? $this->purifier->purify((string)$sessionId) : null;
     }
 
     /**
