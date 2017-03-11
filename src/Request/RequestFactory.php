@@ -50,7 +50,10 @@ class RequestFactory
         \HTMLPurifier $purifier = null
     ) {
         // Generate purifier
-        $purifier = $purifier ?: $this->getPurifier();
+        if (!$purifier) {
+            $purifierFactory = new PurifierFactory();
+            $purifier = $purifierFactory->generatePurifier(PurifierFactory::DEFAULT_CACHE_PATH);
+        }
 
         // Parse data for construction
         $data = json_decode($rawData, true);
