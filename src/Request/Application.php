@@ -1,44 +1,30 @@
 <?php
-/**
- * @file Application.php
- *
- * The application abstraction layer to provide Application ID validation to
- * Alexa requests. Any implementations might provide their own implementations
- * via the $request->setApplicationAbstraction() function but must provide the
- * validateApplicationId() function.
- */
 
 namespace Alexa\Request;
 
-use Alexa\Utility\PurifierHelper;
 use Symfony\Component\Validator\Constraints as Assert;
 
-use InvalidArgumentException;
+use Alexa\Utility\Purifier\HasPurifier;
 
 /**
  * Class Application
  *
- * Encapsulate the Alexa application information
+ * Represents an Alexa application
  *
  * @package Alexa\Request
  */
 class Application
 {
-    // Traits
-
-    use PurifierHelper;
-
     // Constants
 
-    const ERROR_APPLICATION_ID_NOT_STRING = 'The provided application ID value was not a string';
-    const ERROR_APPLICATION_ID_NOT_MATCHED = 'Application ID not matched';
+    const ERROR_APPLICATION_ID_NOT_MATCHED = 'The application ID \'%\' found in the request does not match ' .
+        'any of the expected application IDs.';
+
+    // Traits
+
+    use HasPurifier;
 
     // Fields
-
-    /**
-     * @var \HTMLPurifier
-     */
-    protected $purifier;
 
     /**
      * @var array[string]
@@ -46,7 +32,7 @@ class Application
      * @Assert\Type("array")
      * @Assert\NotBlank
      */
-    protected $applicationIdArray;
+    private $expectedApplicationIds;
 
 
     // Hooks
@@ -54,39 +40,33 @@ class Application
     /**
      * Application constructor.
      *
-     * @param $applicationId
-     * @param \HTMLPurifier|null $purifier
+     * @param $expectedApplicationIds
+     * @param \HTMLPurifier $purifier
      */
-    public function __construct($applicationId, \HTMLPurifier $purifier = null)
+    public function __construct(array $expectedApplicationIds, \HTMLPurifier $purifier)
     {
         // Set purifier
-        $this->purifier = $purifier ?: $this->getPurifier();
+        $this->setPurifier($purifier);
 
-        // Check application ID
-        if (!is_string($applicationId)) {
-            throw new \InvalidArgumentException(self::ERROR_APPLICATION_ID_NOT_STRING);
-        }
-
-        // Purify
-        $applicationId = $this->purifier->purify($applicationId);
-
-        // Parse and set
-        $this->setApplicationIdArray(preg_split('/,/', $applicationId));
-
+        // Set application IDs
+        $this->setExpectedApplicationIds($expectedApplicationIds);
     }
 
     // Public Methods
 
     /**
-     * Validate that the request Application ID matches our Application. This is required as per Amazon requirements.
+     * validateApplicationId()
      *
-     * @param string $requestApplicationId - Application ID from the Request
-     *                               (typically found in $data['session']['application']
+     * Confirms the provided application ID is one of the list provided as valid
+     *
+     * @param $requestApplicationId
+     *
+     * @throws \InvalidArgumentException
      */
     public function validateApplicationId($requestApplicationId)
     {
-        if (!in_array($requestApplicationId, $this->applicationIdArray)) {
-            throw new InvalidArgumentException(self::ERROR_APPLICATION_ID_NOT_MATCHED);
+        if (!in_array($requestApplicationId, $this->getExpectedApplicationIds())) {
+            throw new \InvalidArgumentException(self::ERROR_APPLICATION_ID_NOT_MATCHED);
         }
     }
 
@@ -95,18 +75,18 @@ class Application
     /**
      * @return array
      */
-    public function getApplicationId()
+    public function getExpectedApplicationIds()
     {
-        return $this->applicationIdArray;
+        return $this->expectedApplicationIds;
     }
 
     // Mutators
 
     /**
-     * @param array $applicationIdArray
+     * @param array $expectedApplicationIds
      */
-    public function setApplicationIdArray(array $applicationIdArray)
+    protected function setExpectedApplicationIds(array $expectedApplicationIds)
     {
-        $this->applicationIdArray = $applicationIdArray;
+        $this->expectedApplicationIds = $expectedApplicationIds;
     }
 }

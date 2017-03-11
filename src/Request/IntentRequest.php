@@ -2,18 +2,21 @@
 
 namespace Alexa\Request;
 
-use Alexa\Utility\PurifierHelper;
+use Alexa\Utility\Purifier\HasPurifier;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Class IntentRequest
+ *
+ * Represents an Alexa IntentRequest
+ *
  * @package Alexa\Request
  */
 class IntentRequest extends Request implements RequestInterface
 {
     // Traits
 
-    use PurifierHelper;
+    use HasPurifier;
 
     // Constants
 
@@ -26,23 +29,19 @@ class IntentRequest extends Request implements RequestInterface
     // Fields
 
     /**
-     * @var \HTMLPurifier
-     */
-    protected $purifier;
-    /**
      * @var string
      *
      * @Assert\Type("string")
      * @Assert\NotBlank
      */
-    protected $intentName;
+    private $intentName;
 
     /**
      * @var array
      *
      * @Assert\Type("array")
      */
-    protected $slots = [];
+    private $slots = [];
 
     // Hooks
 
@@ -51,29 +50,29 @@ class IntentRequest extends Request implements RequestInterface
      *
      * @param string $rawData - The original JSON response, before json_decode
      * @param string $applicationId - Your Alexa Dev Portal application ID
-     * @param Certificate|null $certificate - Override the auto-generated Certificate with your own
-     * @param Application|null $application - Override the auto-generated Application with your own
-     * @param \HTMLPurifier|null $purifier
+     * @param Certificate $certificate - Override the auto-generated Certificate with your own
+     * @param Application $application - Override the auto-generated Application with your own
+     * @param \HTMLPurifier $purifier
      *
      * @throws \InvalidArgumentException - If the intent name or slots array is not present in the request
      */
     public function __construct(
         $rawData,
         $applicationId,
-        Certificate $certificate = null,
-        Application $application = null,
-        \HTMLPurifier $purifier = null
+        Certificate $certificate,
+        Application $application,
+        \HTMLPurifier $purifier
     ) {
         // Parent construct
         parent::__construct($rawData, $applicationId, $certificate, $application, $purifier);
 
         // Require intent name
-        if (!isset($this->data['request']['intent']['name'])) {
+        if (!isset($this->getData()['request']['intent']['name'])) {
             throw new \InvalidArgumentException(self::ERROR_INTENT_NAME_NOT_SET);
         }
 
         // Set intent name
-        $this->setIntentName($this->data['request']['intent']['name']);
+        $this->setIntentName($this->getData()['request']['intent']['name']);
 
         // Generate $this->slots
         $this->generateSlotData();
@@ -112,12 +111,12 @@ class IntentRequest extends Request implements RequestInterface
     protected function generateSlotData()
     {
         // Short-circuit on null
-        if (!isset($this->data['request']['intent']['slots'])) {
+        if (!isset($this->getData()['request']['intent']['slots'])) {
             throw new \InvalidArgumentException(self::ERROR_SLOTS_NOT_PRESENT);
         }
 
         // Iterate the slots, attaching each
-        foreach ($this->data['request']['intent']['slots'] as $slotDefinition) {
+        foreach ($this->getData()['request']['intent']['slots'] as $slotDefinition) {
             $this->attachSlot($slotDefinition);
         }
     }
@@ -164,7 +163,7 @@ class IntentRequest extends Request implements RequestInterface
     /**
      * @param string $intentName
      */
-    public function setIntentName($intentName)
+    protected function setIntentName($intentName)
     {
         $this->intentName = $this->purifier->purify((string)$intentName);
     }
@@ -172,7 +171,7 @@ class IntentRequest extends Request implements RequestInterface
     /**
      * @param array $slots
      */
-    public function setSlots(array $slots)
+    protected function setSlots(array $slots)
     {
         $this->slots = $slots;
     }

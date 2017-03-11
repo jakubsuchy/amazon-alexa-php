@@ -2,8 +2,9 @@
 
 namespace Alexa\Request;
 
-use Alexa\Utility\PurifierHelper;
 use Symfony\Component\Validator\Constraints as Assert;
+
+use Alexa\Utility\Purifier\HasPurifier;
 
 /**
  * Class Session
@@ -16,7 +17,7 @@ class Session
 {
     // Traits
 
-    use PurifierHelper;
+    use HasPurifier;
 
     // Constants
 
@@ -25,37 +26,33 @@ class Session
     // Fields
 
     /**
-     * @var \HTMLPurifier
-     */
-    protected $purifier;
-    /**
      * @var User
      *
      * @Assert\Type("\Alexa\Request\User")
      * @Assert\NotBlank
      */
-    protected $user;
+    private $user;
     /**
      * @var bool
      *
      * @Assert\Type("bool")
      * @Assert\NotNull
      */
-    protected $new;
+    private $new;
     /**
      * @var string
      *
      * @Assert\Type("string")
      * @Assert\NotBlank
      */
-    protected $sessionId;
+    private $sessionId;
     /**
      * @var array
      *
      * @Assert\Type("array")
      * @Assert\NotBlank
      */
-    protected $attributes = [];
+    private $attributes = [];
 
     // Hooks
 
@@ -63,12 +60,12 @@ class Session
      * Session constructor.
      *
      * @param array $data
-     * @param \HTMLPurifier|null $purifier
+     * @param \HTMLPurifier $purifier
      */
-    public function __construct(array $data, \HTMLPurifier $purifier = null)
+    public function __construct(array $data, \HTMLPurifier $purifier)
     {
         // Set purifier
-        $this->purifier = $purifier ?: $this->getPurifier();
+        $this->setPurifier($purifier);
 
         // Set fields
         $this->setUser(new User($data['user'], $this->purifier));
@@ -86,7 +83,7 @@ class Session
     /**
      * openPhpSession()
      *
-     * Open PHP SESSION using amazon provided sessionId, for storing data about the session.
+     * Open PHP session using Amazon-provided sessionId, for storing data about the session.
      * Session cookie won't be sent.
      */
     public function openPhpSession()
@@ -178,7 +175,7 @@ class Session
     /**
      * @param User $user
      */
-    public function setUser(User $user)
+    protected function setUser(User $user)
     {
         $this->user = $user;
     }
@@ -186,7 +183,7 @@ class Session
     /**
      * @param bool $new
      */
-    public function setNew($new)
+    protected function setNew($new)
     {
         $this->new = (bool)$new;
     }
@@ -194,7 +191,7 @@ class Session
     /**
      * @param null $sessionId
      */
-    public function setSessionId($sessionId)
+    protected function setSessionId($sessionId)
     {
         $this->sessionId = $sessionId ? $this->purifier->purify((string)$sessionId) : null;
     }
@@ -202,7 +199,7 @@ class Session
     /**
      * @param array $attributes
      */
-    public function setAttributes(array $attributes)
+    protected function setAttributes(array $attributes)
     {
         $this->attributes = $attributes;
     }

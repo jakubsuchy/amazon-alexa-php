@@ -2,33 +2,32 @@
 
 namespace Alexa\Request;
 
-use Alexa\Utility\PurifierHelper;
 use Symfony\Component\Validator\Constraints as Assert;
+
+use Alexa\Utility\Purifier\HasPurifier;
 
 /**
  * Class SessionEndedRequest
+ *
+ * Represents an Alexa SessionEndedRequest
+ *
  * @package Alexa\Request
  */
-class SessionEndedRequest extends Request implements RequestInterface
+class SessionEndedRequest extends Request
 {
     // Traits
 
-    use PurifierHelper;
+    use HasPurifier;
 
     // Fields
 
-
-    /**
-     * @var \HTMLPurifier
-     */
-    protected $purifier;
     /**
      * @var string
      *
      * @Assert\Type("string")
      * @Assert\NotBlank
      */
-    protected $reason;
+    private $reason;
 
     // Hooks
 
@@ -37,22 +36,22 @@ class SessionEndedRequest extends Request implements RequestInterface
      *
      * @param string $rawData - The original JSON response, before json_decode
      * @param string $applicationId - Your Alexa Dev Portal application ID
-     * @param Certificate|null $certificate - Override the auto-generated Certificate with your own
-     * @param Application|null $application - Override the auto-generated Application with your own
-     * @param \HTMLPurifier|null $purifier
+     * @param Certificate $certificate - Override the auto-generated Certificate with your own
+     * @param Application $application - Override the auto-generated Application with your own
+     * @param \HTMLPurifier $purifier
      */
     public function __construct(
         $rawData,
         $applicationId,
-        Certificate $certificate = null,
-        Application $application = null,
-        \HTMLPurifier $purifier = null
+        Certificate $certificate,
+        Application $application,
+        \HTMLPurifier $purifier
     ) {
         // Parent construct
         parent::__construct($rawData, $applicationId, $certificate, $application, $purifier);
 
         // Set reason
-        $this->setReason($this->data['request']['reason']);
+        $this->setReason($this->getData()['request']['reason']);
     }
 
     // Accessors
@@ -70,7 +69,7 @@ class SessionEndedRequest extends Request implements RequestInterface
     /**
      * @param string $reason
      */
-    public function setReason($reason)
+    protected function setReason($reason)
     {
         $this->reason = $reason ? $this->purifier->purify((string)$reason) : null;
     }

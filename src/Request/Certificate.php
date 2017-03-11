@@ -1,23 +1,17 @@
 <?php
 
-/**
- * @file Certificate.php
- * Validate the request signature
- * Based on code from alexa-app: https://github.com/develpr/alexa-app by Kevin Mitchell
- * */
-
 namespace Alexa\Request;
 
-use Alexa\Utility\PurifierHelper;
 use Symfony\Component\Validator\Constraints as Assert;
-use RuntimeException;
-use InvalidArgumentException;
-use DateTime;
+
+use Alexa\Utility\Purifier\HasPurifier;
 
 /**
  * Class Certificate
  * 
- * Encapulates the Amazon certificate attached to an Alexa request
+ * Represents an Amazon HTTPS certificate
+ *
+ * Based on code from alexa-app: https://github.com/develpr/alexa-app by Kevin Mitchell
  * 
  * @package Alexa\Request
  */
@@ -25,7 +19,7 @@ class Certificate
 {
     // Traits
 
-    use PurifierHelper;
+    use HasPurifier;
 
     // Constants
     
@@ -50,44 +44,39 @@ class Certificate
 
     // Fields
 
-
-    /**
-     * @var \HTMLPurifier
-     */
-    protected $purifier;
     /**
      * @var string
      *
      * @Assert\Url
      * @Assert\NotBlank
      */
-    protected $certificateUrl;
+    private $certificateUrl;
     /**
      * @var string
      *
      * @Assert\Type("string")
      * @Assert\NotBlank
      */
-    protected $requestSignature;
+    private $requestSignature;
     /**
      * @var string
      *
      * @Assert\Type("string")
      * @Assert\NotBlank
      */
-    protected $certificateContent;
+    private $certificateContent;
 
     // Hooks
 
     /**
      * @param string $certificateUrl
      * @param string $signature
-     * @param \HTMLPurifier|null $purifier
+     * @param \HTMLPurifier $purifier
      */
-    public function __construct($certificateUrl, $signature, \HTMLPurifier $purifier = null)
+    public function __construct($certificateUrl, $signature, \HTMLPurifier $purifier)
     {
         // Set purifier
-        $this->purifier = $purifier ?: $this->getPurifier();
+        $this->setPurifier($purifier);
 
         // Set certificate URL and request signature
         $this->setCertificateUrl($certificateUrl);
@@ -99,14 +88,14 @@ class Certificate
     /**
      * validateRequest()
      *
-     * Perform certificate validations
+     * Verify the HTTPS certificate information provided in the raw request is a valid Amazon certificate
      *
-     * @param string $jsonRequestData
+     * @throws \InvalidArgumentException
      */
-    public function validateRequest($jsonRequestData)
+    public function validateRequest($rawRequestData)
     {
         // Parse the JSON
-        $requestData = json_decode($jsonRequestData, true);
+        $requestData = json_decode($rawRequestData, true);
 
         // Validate the entire request by:
 
@@ -120,7 +109,7 @@ class Certificate
         $this->validateCertificate();
 
         // 4. Verifying the request signature
-        $this->validateRequestSignature($jsonRequestData);
+        $this->validateRequestSignature($rawRequestData);
     }
 
     // Protected Methods
@@ -130,18 +119,18 @@ class Certificate
      *
      * Check if request is within the allowed time
      *
-     * @throws InvalidArgumentException
+     * @throws \InvalidArgumentException
      */
     protected function validateTimestamp($timestamp)
     {
         // Generate DateTimes
-        $currentDateTime = new DateTime();
-        $timestamp = new DateTime($timestamp);
+        $currentDateTime = new \DateTime();
+        $timestamp = new \DateTime($timestamp);
 
         // Compare
         $differenceInSeconds = $currentDateTime->getTimestamp() - $timestamp->getTimestamp();
         if ($differenceInSeconds > self::TIMESTAMP_VALID_TOLERANCE_SECONDS) {
-            throw new InvalidArgumentException(self::ERROR_REQUEST_EXPIRED);
+            throw new \InvalidArgumentException(self::ERROR_REQUEST_EXPIRED);
         }
     }
 
@@ -150,7 +139,7 @@ class Certificate
      *
      * Verify URL of the certificate
      *
-     * @throws InvalidArgumentException
+     * @throws \InvalidArgumentException
      * @author Emanuele Corradini <emanuele@evensi.com>
      */
     protected function verifySignatureCertificateURL()
@@ -182,7 +171,7 @@ class Certificate
     /**
      * validateCertificate()
      *
-     * @throws InvalidArgumentException
+     * @throws \InvalidArgumentException
      */
     protected function validateCertificate()
     {
@@ -194,12 +183,12 @@ class Certificate
 
         // Check expiration
         if (!$this->validateCertificateDate($parsedCertificate)) {
-            throw new InvalidArgumentException(self::ERROR_EXPIRED_SIGNATURE);
+            throw new \InvalidArgumentException(self::ERROR_EXPIRED_SIGNATURE);
         }
 
         // Check SAN
         if (!$this->validateCertificateSan($parsedCertificate, self::ECHO_SERVICE_DOMAIN)) {
-            throw new InvalidArgumentException(self::ERROR_INVALID_SAN);
+            throw new \InvalidArgumentException(self::ERROR_INVALID_SAN);
         }
     }
 
@@ -223,7 +212,7 @@ class Certificate
     {
         // Check for CURL
         if (!function_exists("curl_init")) {
-            throw new InvalidArgumentException(self::ERROR_CURL_REQUIRED);
+            throw new \InvalidArgumentException(self::ERROR_CURL_REQUIRED);
         }
 
         // Perform CURL
@@ -265,6 +254,7 @@ class Certificate
         $validFrom = $parsedCertificate['validFrom_time_t'];
         $validTo = $parsedCertificate['validTo_time_t'];
         $time = time();
+
         return ($validFrom <= $time && $time <= $validTo);
     }
 
@@ -287,7 +277,7 @@ class Certificate
      * validateRequestSignature()
      *
      * @params $requestData 
-     * @throws InvalidArgumentException
+     * @throws \InvalidArgumentException
      */
     protected function validateRequestSignature($requestData)
     {
@@ -296,7 +286,7 @@ class Certificate
         $valid = openssl_verify($requestData, base64_decode($this->requestSignature), $certificateKey, self::ENCRYPT_METHOD);
 
         if (!$valid) {
-            throw new InvalidArgumentException(self::ERROR_INVALID_SIGNATURE);
+            throw new \InvalidArgumentException(self::ERROR_INVALID_SIGNATURE);
         }
     }
 
@@ -332,7 +322,7 @@ class Certificate
     /**
      * @param string $certificateUrl
      */
-    public function setCertificateUrl($certificateUrl)
+    protected function setCertificateUrl($certificateUrl)
     {
         $this->certificateUrl = $certificateUrl ? (string)$certificateUrl : null;
     }
@@ -340,7 +330,7 @@ class Certificate
     /**
      * @param string $requestSignature
      */
-    public function setRequestSignature($requestSignature)
+    protected function setRequestSignature($requestSignature)
     {
         $this->requestSignature = $requestSignature ? (string)$requestSignature : null;
     }
@@ -348,7 +338,7 @@ class Certificate
     /**
      * @param string $certificateContent
      */
-    public function setCertificateContent($certificateContent)
+    protected function setCertificateContent($certificateContent)
     {
         $this->certificateContent = $certificateContent ? (string)$certificateContent : null;
     }

@@ -2,27 +2,24 @@
 
 namespace Alexa\Request;
 
+use Symfony\Component\Validator\Validation;
+use Symfony\Component\Validator\ConstraintViolationListInterface;
+
+use Alexa\Request\BaseRequest;
 use Alexa\Request\Application;
 use Alexa\Request\Certificate;
 use Alexa\Request\CustomSkillRequestTypes;
-use Alexa\Utility\PurifierHelper;
-use Symfony\Component\Validator\ConstraintViolationListInterface;
-use Symfony\Component\Validator\Validation;
-use Symfony\Component\Validator\Validator\RecursiveValidator;
-use Symfony\Component\Validator\ValidatorBuilder;
+use Alexa\Utility\Purifier\PurifierFactory;
 
 /**
  * Class RequestFactory
  *
  * Generate RequestInterface items
  *
- * @package Request
+ * @package Alexa\Request
  */
 class RequestFactory
 {
-    // Traits
-
-    use PurifierHelper;
 
     // Constants
 
@@ -47,7 +44,7 @@ class RequestFactory
      */
     public function fromRawData(
         $rawData,
-        $applicationId,
+        array $expectedApplicationIds,
         Certificate $certificate = null,
         Application $application = null,
         \HTMLPurifier $purifier = null
@@ -58,12 +55,21 @@ class RequestFactory
         // Parse data for construction
         $data = json_decode($rawData, true);
 
+        // Perform defaults
+        $application = $application ?: new Application($expectedApplicationIds, $purifier);
+        $certificate = $certificate ?:
+            new Certificate($_SERVER['HTTP_SIGNATURECERTCHAINURL'], $_SERVER['HTTP_SIGNATURE'], $purifier);
+        $purifier = $purifier ?: PurifierFactory::generatePurifier(PurifierFactory::DEFAULT_CACHE_PATH);
+
         // Generate base request
-        /** @var Request $request */
-        $request = $this->generateRequest($data, $rawData, $applicationId, $purifier, $certificate, $application);
+        /** @var BaseRequest $request */
+        $request = $this->generateRequest($data, $rawData, $purifier, $certificate, $application);
 
         // Validate received application ID matches client value
-        $request->getApplication()->validateApplicationId($data['session']['application']['applicationId']);
+        $requestApplicationId = isset($data['session']['application']['applicationId']) ?
+            $data['session']['application']['applicationId'] :
+            null;
+        $request->getApplication()->validateApplicationId($requestApplicationId);
 
         // Validate that the request signature matches the certificate
         $request->getCertificate()->validateRequest($rawData);
@@ -83,8 +89,7 @@ class RequestFactory
      * Generate a RequestInterface object of the correct type
      *
      * @param array $data
-     * @param $rawData
-     * @param $applicationId
+     * @param string $rawData
      * @param \HtmlPurifier $purifier
      * @param Certificate|null $certificate - Override the auto-generated Certificate with your own
      * @param Application|null $application - Override the auto-generated Application with your own
@@ -95,10 +100,9 @@ class RequestFactory
     protected function generateRequest(
         array $data,
         $rawData,
-        $applicationId,
         \HTMLPurifier $purifier,
-        $certificate,
-        $application
+        Certificate $certificate,
+        Application $application
     ) {
         // Retrieve request type
         $requestType = $purifier->purify($data['request']['type']);
@@ -114,7 +118,7 @@ class RequestFactory
         $requestClass = CustomSkillRequestTypes::$validTypes[$requestType];
 
         // Generate request
-        $request = new $requestClass($rawData, $applicationId, $certificate, $application, $purifier);
+        $request = new $requestClass($rawData, $certificate, $application, $purifier);
 
         // Return
         return $request;

@@ -2,6 +2,8 @@
 
 namespace Alexa\Response;
 
+use Alexa\Response\OutputSpeech\OutputSpeechInterface;
+
 /**
  * Class Reprompt
  *
@@ -13,19 +15,28 @@ class Reprompt
 {
     // Fields
 
-    protected $outputSpeech;
+    /**
+     * @var OutputSpeechInterface
+     */
+    private $outputSpeech;
 
     // Hooks
 
     /**
      * Reprompt constructor.
+     *
+     * @param OutputSpeechInterface $outputSpeech
      */
-    public function __construct()
+    public function __construct(OutputSpeech $outputSpeech)
     {
-        $this->outputSpeech = new OutputSpeech;
+        $this->outputSpeech = $outputSpeech;
     }
 
     /**
+     * render()
+     *
+     * Render the reprompt as an array for JSON encoding
+     *
      * @return array
      */
     public function render()
@@ -38,7 +49,7 @@ class Reprompt
     // Accessors
 
     /**
-     * @return OutputSpeech
+     * @return OutputSpeechInterface
      */
     public function getOutputSpeech()
     {
@@ -48,9 +59,9 @@ class Reprompt
     // Mutators
 
     /**
-     * @param OutputSpeech $outputSpeech
+     * @param OutputSpeechInterface $outputSpeech
      */
-    public function setOutputSpeech($outputSpeech)
+    protected function setOutputSpeech($outputSpeech)
     {
         $this->outputSpeech = $outputSpeech;
     }

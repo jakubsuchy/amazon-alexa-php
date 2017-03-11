@@ -2,10 +2,18 @@
 
 namespace Alexa\Response;
 
+use Alexa\Response\Card\CardInterface;
+use Alexa\Response\Card\LinkAccountCard;
+use Alexa\Response\Card\SimpleCard;
+use Alexa\Response\Card\StandardCard;
+use Alexa\Response\OutputSpeech\OutputSpeechInterface;
+use Alexa\Response\OutputSpeech\PlainTextOutputSpeech;
+use Alexa\Response\OutputSpeech\SsmlOutputSpeech;
+
 /**
  * Class Response
  *
- * Represents and Alexa Response
+ * Represents an Alexa Response
  *
  * @package Alexa\Response
  */
@@ -16,32 +24,34 @@ class Response
     /**
      * @var string
      */
-    protected $version = '1.0';
+    private $version = '1.0';
     /**
      * @var array
      */
-    protected $sessionAttributes = [];
+    private $sessionAttributes = [];
     /**
-     * @var OutputSpeech
+     * @var OutputSpeechInterface
      */
-    protected $outputSpeech;
+    private $outputSpeech;
     /**
-     * @var Card
+     * @var CardInterface
      */
-    protected $card;
+    private $card;
     /**
      * @var Reprompt
      */
-    protected $reprompt;
+    private $reprompt;
     /**
      * @var bool
      */
-    protected $shouldEndSession = false;
+    private $shouldEndSession = false;
 
     // Public Methods
 
     /**
-     * Set output speech as text
+     * respond()
+     *
+     * Set output speech as $text
      *
      * @param string $text
      *
@@ -49,48 +59,57 @@ class Response
      */
     public function respond($text)
     {
-        $this->outputSpeech = new OutputSpeech;
-        $this->outputSpeech->setText($text);
+        $this->setOutputSpeech(new PlainTextOutputSpeech($text));
 
         return $this;
     }
         
     /**
-     * Set up response with SSML.
+     * respondSSML()
+     *
+     * Set up response with SSML
+     *
      * @param string $ssml
+     *
      * @return \Alexa\Response\Response
      */
-    public function respondSSML($ssml) {
-        $this->outputSpeech = new OutputSpeech;
-        $this->outputSpeech->setType(OutputSpeech::TYPE_SSML);
-        $this->outputSpeech->setSsml($ssml);
+    public function respondSSML($ssml)
+    {
+        $this->setOutputSpeech(new SsmlOutputSpeech($ssml));
 
         return $this;
     }
 
     /**
+     * reprompt()
+     *
      * Set up reprompt with given text
+     *
      * @param string $text
+     *
      * @return \Alexa\Response\Response
      */
     public function reprompt($text)
     {
-        $this->reprompt = new Reprompt;
-        $this->reprompt->getOutputSpeech()->setText($text);
+        $outputSpeech = new PlainTextOutputSpeech($text);
+        $this->setReprompt(new Reprompt($outputSpeech));
 
         return $this;
     }
         
     /**
+     * repromptSSML()
+     *
      * Set up reprompt with given ssml
+     *
      * @param string $ssml
+     *
      * @return \Alexa\Response\Response
      */
     public function repromptSSML($ssml)
     {
-        $this->reprompt = new Reprompt;
-        $this->reprompt->getOutputSpeech()->setType(OutputSpeech::TYPE_SSML);
-        $this->reprompt->getOutputSpeech()->setSsml($ssml);
+        $outputSpeech = new SsmlOutputSpeech($ssml);
+        $this->setReprompt(new Reprompt($outputSpeech));
 
         return $this;
     }
@@ -107,10 +126,8 @@ class Response
      */
     public function withCard($title, $content)
     {
-        $this->card = new Card;
-        $this->card->setType(Card::CARD_TYPE_SIMPLE);
-        $this->card->setTitle($title);
-        $this->card->setSimpleCardContent($content);
+        $simpleCard = new SimpleCard($title, $content);
+        $this->setCard($simpleCard);
         
         return $this;
     }
@@ -129,12 +146,8 @@ class Response
      */
     public function withStandardCard($title, $cardText, $smallImageUrl, $largeImageUrl)
     {
-        $this->card = new Card;
-        $this->card->setType(Card::CARD_TYPE_STANDARD);
-        $this->card->setTitle($title);
-        $this->card->setStandardCardText($cardText);
-        $this->card->setSmallImageUrl($smallImageUrl);
-        $this->card->setLargeImageUrl($largeImageUrl);
+        $standardCard = new StandardCard($title, $cardText, $smallImageUrl, $largeImageUrl);
+        $this->setCard($standardCard);
 
         return $this;
     }
@@ -148,14 +161,15 @@ class Response
      */
     public function withLinkAccountCard()
     {
-        $this->card = new Card;
-        $this->card->setType(Card::CARD_TYPE_LINK_ACCOUNT);
+        $this->setCard(new LinkAccountCard());
 
         return $this;
     }
 
     /**
-     * Set if it should end the session
+     * endSession()
+     *
+     * Set if this response should end the session
      *
      * @param bool $shouldEndSession
      *
@@ -169,7 +183,10 @@ class Response
     }
         
     /**
-     * Add a session attribute that will be passed in every requests.
+     * addSessionAttribute()
+     *
+     * Add a session attribute that will be passed along with future requests in the conversation
+     *
      * @param string $key
      * @param mixed $value
      */
@@ -179,21 +196,38 @@ class Response
     }
 
     /**
-     * Return the response as an array for JSON-ification
-     * @return type
+     * render()
+     *
+     * Return the response as an array for JSON encoding
+     *
+     * @return array
      */
     public function render()
     {
-        return [
+        $outputArray = [
             'version' => $this->version,
-            'sessionAttributes' => $this->sessionAttributes,
             'response' => [
-                'outputSpeech' => $this->outputSpeech ? $this->outputSpeech->render() : null,
-                'card' => $this->card ? $this->card->render() : null,
-                'reprompt' => $this->reprompt ? $this->reprompt->render() : null,
-                'shouldEndSession' => $this->shouldEndSession ? true : false
+                'shouldEndSession' => $this->shouldEndSession()
             ]
         ];
+
+        if (count($this->getSessionAttributes())) {
+            $outputArray['sessionAttributes'] = $this->getSessionAttributes();
+        }
+
+        if ($this->getOutputSpeech()) {
+            $outputArray['response']['outputSpeech'] = $this->getOutputSpeech();
+        }
+
+
+        if ($this->getCard()) {
+            $outputArray['response']['card'] = $this->getCard();
+        }
+
+
+        if ($this->getReprompt()) {
+            $outputArray['response']['reprompt'] = $this->getReprompt();
+        }
     }
 
     // Accessors
@@ -215,7 +249,7 @@ class Response
     }
 
     /**
-     * @return OutputSpeech
+     * @return OutputSpeechInterface
      */
     public function getOutputSpeech()
     {
@@ -223,7 +257,7 @@ class Response
     }
 
     /**
-     * @return Card
+     * @return CardInterface
      */
     public function getCard()
     {
@@ -251,7 +285,7 @@ class Response
     /**
      * @param string $version
      */
-    public function setVersion($version)
+    protected function setVersion($version)
     {
         $this->version = $version ? (string)$version : null;
     }
@@ -259,23 +293,23 @@ class Response
     /**
      * @param array $sessionAttributes
      */
-    public function setSessionAttributes(array $sessionAttributes)
+    protected function setSessionAttributes(array $sessionAttributes)
     {
         $this->sessionAttributes = $sessionAttributes;
     }
 
     /**
-     * @param OutputSpeech $outputSpeech
+     * @param OutputSpeechInterface $outputSpeech
      */
-    public function setOutputSpeech(OutputSpeech $outputSpeech)
+    protected function setOutputSpeech(OutputSpeechInterface $outputSpeech)
     {
         $this->outputSpeech = $outputSpeech;
     }
 
     /**
-     * @param Card $card
+     * @param CardInterface $card
      */
-    public function setCard(Card $card)
+    protected function setCard(CardInterface $card)
     {
         $this->card = $card;
     }
@@ -283,7 +317,7 @@ class Response
     /**
      * @param Reprompt $reprompt
      */
-    public function setReprompt(Reprompt $reprompt)
+    protected function setReprompt(Reprompt $reprompt)
     {
         $this->reprompt = $reprompt;
     }
@@ -291,7 +325,7 @@ class Response
     /**
      * @param bool $shouldEndSession
      */
-    public function setShouldEndSession($shouldEndSession)
+    protected function setShouldEndSession($shouldEndSession)
     {
         $this->shouldEndSession = (bool)$shouldEndSession;
     }

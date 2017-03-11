@@ -2,90 +2,77 @@
 
 namespace Alexa\Request;
 
-use Alexa\Utility\PurifierHelper;
 use Symfony\Component\Validator\Constraints as Assert;
-
-use \RuntimeException;
-use \DateTime;
 
 use Alexa\Request\Certificate;
 use Alexa\Request\Application;
 
+use Alexa\Utility\Purifier\HasPurifier;
+
 /**
- * Class Request
+ * Class BaseRequest
  *
  * Encapsulates an Alexa request
  *
  * @package Alexa\Request
  */
-abstract class Request implements RequestInterface
+abstract class BaseRequest implements RequestInterface
 {
     // Traits
 
-    use PurifierHelper;
+    use HasPurifier;
 
     // Fields
 
-    /**
-     * @var \HTMLPurifier
-     */
-    protected $purifier;
     /**
      * @var string
      *
      * @Assert\Type("string")
      * @Assert\NotBlank
      */
-    protected $requestId;
+    private $requestId;
     /**
-     * @var DateTime
+     * @var \DateTime
      *
      * @Assert\DateTime
      * @Assert\NotBlank
      */
-    protected $timestamp;
+    private $timestamp;
     /**
      * @var array
      *
      * @Assert\Type("array")
      * @Assert\NotBlank
      */
-    protected $data;
+    private $data;
     /**
      * @var string
      *
      * @Assert\Type("string")
      * @Assert\NotBlank
      */
-    protected $rawData;
-    /**
-     * @var string
-     *
-     * @Assert\Type("string")
-     * @Assert\NotBlank
-     */
-    protected $applicationId;
+    private $rawData;
     /**
      * @var \Alexa\Request\Certificate
      *
      * @Assert\Type("\Alexa\Request\Certificate")
      * @Assert\NotBlank
      */
-    protected $certificate;
+    private $certificate;
     /**
      * @var \Alexa\Request\Application
      *
      * @Assert\Type("\Alexa\Request\Application")
      * @Assert\NotBlank
      */
-    protected $application;
+    private $application;
     /**
      * @var Session
      *
      * @Assert\Type("\Alexa\Request\Session")
      * @Assert\NotBlank
      */
-    protected $session;
+    private $session;
 
     // Hooks
 
@@ -95,21 +82,16 @@ abstract class Request implements RequestInterface
      * Parse the JSON onto the RequestInterface object
      *
      * @param string $rawData - The original JSON response, before json_decode
-     * @param string $applicationId - Your Alexa Dev Portal application ID
-     * @param Certificate|null $certificate - Override the auto-generated Certificate with your own
-     * @param Application|null $application - Override the auto-generated Application with your own
-     * @param \HTMLPurifier|null $purifier
+     * @param Certificate $certificate - Override the auto-generated Certificate with your own
+     * @param Application $application - Override the auto-generated Application with your own
+     * @param \HTMLPurifier $purifier
      */
     public function __construct(
         $rawData,
-        $applicationId,
-        Certificate $certificate = null,
-        Application $application = null,
-        \HTMLPurifier $purifier = null
+        Certificate $certificate,
+        Application $application,
+        \HTMLPurifier $purifier
     ) {
-        // Set purifier
-        $this->purifier = $purifier ?: $this->getPurifier();
-
         // Check $rawData format
         if (!is_string($rawData)) {
             throw new \InvalidArgumentException('Alexa Request requires the raw JSON data '.
@@ -117,23 +99,41 @@ abstract class Request implements RequestInterface
         }
 
         // Store the raw data
-        $this->rawData = $rawData;
+        $this->setRawData($rawData);
 
         // Decode the raw data into a JSON array
-        $this->data = json_decode($rawData, true);
+        $this->setData(json_decode($rawData, true));
 
-        // Parse top-level values
+        // Set values
+        $this->setPurifier($purifier);
         $this->setRequestId($this->data['request']['requestId']);
-        $this->timestamp = new DateTime($this->data['request']['timestamp']);
-        $this->session = new Session($this->data['session'], $this->purifier);
-        $this->setApplicationId($applicationId);
+        $this->setTimestamp(new \DateTime($this->data['request']['timestamp']));
+        $this->setSession(new Session($this->data['session'], $this->getPurifier()));
+        $this->setCertificate($certificate);
+        $this->setApplication($application);
+    }
 
-        // Create certificate from server data if not provided
-        $this->certificate = $certificate ?:
-            new Certificate($_SERVER['HTTP_SIGNATURECERTCHAINURL'], $_SERVER['HTTP_SIGNATURE'], $this->purifier);
-
-        // Create application from ID if override not provided
-        $this->application = $application ?: new Application($this->applicationId, $this->purifier);
+    /**
+     * destroyPurifiers()
+     *
+     * Destroy all the purifiers associated with this Request and its dependencies,
+     * to improve dumpability/loggability
+     *
+     * @return void
+     */
+    public function destroyPurifiers()
+    {
+        $this->setPurifier(null);
+        if ($this->getSession()) {
+            $this->getSession()->setPurifier(null);
+            $this->getSession()->getUser()->setPurifier(null);
+        }
+        if ($this->getApplication()) {
+            $this->getApplication()->setPurifier(null);
+        }
+        if ($this->getCertificate()) {
+            $this->getCertificate()->setPurifier(null);
+        }
     }
 
 
@@ -148,7 +148,7 @@ abstract class Request implements RequestInterface
     }
 
     /**
-     * @return DateTime
+     * @return \DateTime
      */
     public function getTimestamp()
     {
@@ -169,14 +169,6 @@ abstract class Request implements RequestInterface
     public function getRawData()
     {
         return $this->rawData;
-    }
-
-    /**
-     * @return string
-     */
-    public function getApplicationId()
-    {
-        return $this->applicationId;
     }
 
     /**
@@ -208,15 +200,15 @@ abstract class Request implements RequestInterface
     /**
      * @param string $requestId
      */
-    public function setRequestId($requestId)
+    protected function setRequestId($requestId)
     {
-        $this->requestId = $requestId ? $this->purifier->purify((string)$requestId) : null;
+        $this->requestId = $requestId ? $this->getPurifier()->purify((string)$requestId) : null;
     }
 
     /**
-     * @param DateTime $timestamp
+     * @param \DateTime $timestamp
      */
-    public function setTimestamp(\DateTime $timestamp)
+    protected function setTimestamp(\DateTime $timestamp)
     {
         $this->timestamp = $timestamp;
     }
@@ -224,7 +216,7 @@ abstract class Request implements RequestInterface
     /**
      * @param array $data
      */
-    public function setData(array $data)
+    protected function setData(array $data)
     {
         $this->data = $data;
     }
@@ -232,23 +224,15 @@ abstract class Request implements RequestInterface
     /**
      * @param string $rawData
      */
-    public function setRawData($rawData)
+    protected function setRawData($rawData)
     {
         $this->rawData = $rawData ? (string)$rawData : null;
     }
 
     /**
-     * @param string $applicationId
-     */
-    public function setApplicationId($applicationId)
-    {
-        $this->applicationId = $applicationId ? $this->purifier->purify((string)$applicationId) : null;
-    }
-
-    /**
      * @param \Alexa\Request\Certificate $certificate
      */
-    public function setCertificate(Certificate $certificate)
+    protected function setCertificate(Certificate $certificate)
     {
         $this->certificate = $certificate;
     }
@@ -256,7 +240,7 @@ abstract class Request implements RequestInterface
     /**
      * @param \Alexa\Request\Application $application
      */
-    public function setApplication(Application $application)
+    protected function setApplication(Application $application)
     {
         $this->application = $application;
     }
@@ -264,7 +248,7 @@ abstract class Request implements RequestInterface
     /**
      * @param Session $session
      */
-    public function setSession(Session $session)
+    protected function setSession(Session $session)
     {
         $this->session = $session;
     }

@@ -2,14 +2,14 @@
 
 namespace Alexa\Request;
 
-
-use Alexa\Utility\PurifierHelper;
 use Symfony\Component\Validator\Constraints as Assert;
+
+use Alexa\Utility\Purifier\HasPurifier;
 
 /**
  * Class User
  *
- * Encapsulate an Alexa user
+ * Represents the User attached to an Alexa request
  *
  * @package Alexa\Request
  */
@@ -17,28 +17,24 @@ class User
 {
     // Traits
 
-    use PurifierHelper;
+    use HasPurifier;
 
     // Fields
 
     /**
-     * @var \HTMLPurifier
+     * @var string
+     *
+     * @Assert\Type("string")
+     * @Assert\NotBlank
      */
-    protected $purifier;
+    private $userId;
     /**
      * @var string
      *
      * @Assert\Type("string")
      * @Assert\NotBlank
      */
-    protected $userId;
-    /**
-     * @var string
-     *
-     * @Assert\Type("string")
-     * @Assert\NotBlank
-     */
-    protected $accessToken;
+    private $accessToken;
 
     // Hooks
 
@@ -46,16 +42,32 @@ class User
      * User constructor.
      *
      * @param array $data
-     * @param \HTMLPurifier|null $purifier
+     * @param \HTMLPurifier $purifier
      */
-    public function __construct(array $data, \HTMLPurifier $purifier = null)
+    public function __construct(array $data, \HTMLPurifier $purifier)
     {
         // Set purifier
-        $this->purifier = $purifier ?: $this->getPurifier();
+        $this->setPurifier($purifier);
 
         // Set fields
         $this->setUserId($data['userId']);
         $this->setAccessToken(isset($data['accessToken']) ? $data['accessToken'] : null);
+    }
+
+    // Public Methods
+
+    /**
+     * validateAccessToken()
+     *
+     * Returns true if the $expectedAccessToken matches the token found in the Alexa request
+     *
+     * @param $expectedAccessToken
+     *
+     * @return bool
+     */
+    public function validateAccessToken($expectedAccessToken)
+    {
+        return $expectedAccessToken === $this->getAccessToken();
     }
 
     // Accessors
@@ -81,7 +93,7 @@ class User
     /**
      * @param string $userId
      */
-    public function setUserId($userId)
+    protected function setUserId($userId)
     {
         $this->userId = $userId ? $this->purifier->purify((string)$userId) : null;
     }
@@ -89,7 +101,7 @@ class User
     /**
      * @param string $accessToken
      */
-    public function setAccessToken($accessToken)
+    protected function setAccessToken($accessToken)
     {
         $this->accessToken = $accessToken ? $this->purifier->purify((string)$accessToken) : null;
     }
