@@ -18,6 +18,20 @@ trait HasPurifier
      */
     private $purifier;
 
+    // Public Methods
+
+    /**
+     * destroyPurifier()
+     *
+     * Set $this->purififer = null; facilitates Request logging
+     *
+     * @return void
+     */
+    public function destroyPurifier()
+    {
+        $this->setPurifier(null);
+    }
+
     // Accessors
 
     /**

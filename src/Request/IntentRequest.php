@@ -51,7 +51,6 @@ class IntentRequest extends BaseRequest
      * IntentRequest()
      *
      * @param string $rawData - The original JSON response, before json_decode
-     * @param string $applicationId - Your Alexa Dev Portal application ID
      * @param Certificate $certificate - Override the auto-generated Certificate with your own
      * @param Application $application - Override the auto-generated Application with your own
      * @param \HTMLPurifier $purifier
@@ -60,13 +59,12 @@ class IntentRequest extends BaseRequest
      */
     public function __construct(
         $rawData,
-        $applicationId,
         Certificate $certificate,
         Application $application,
         \HTMLPurifier $purifier
     ) {
         // Parent construct
-        parent::__construct($rawData, $applicationId, $certificate, $application, $purifier);
+        parent::__construct($rawData, $certificate, $application, $purifier);
 
         // Require intent name
         if (!isset($this->getData()['request']['intent']['name'])) {

@@ -123,16 +123,16 @@ abstract class BaseRequest implements RequestInterface
      */
     public function destroyPurifiers()
     {
-        $this->setPurifier(null);
+        $this->destroyPurifier();
         if ($this->getSession()) {
-            $this->getSession()->setPurifier(null);
-            $this->getSession()->getUser()->setPurifier(null);
+            $this->getSession()->destroyPurifier();
+            $this->getSession()->getUser()->destroyPurifier();
         }
         if ($this->getApplication()) {
-            $this->getApplication()->setPurifier(null);
+            $this->getApplication()->destroyPurifier();
         }
         if ($this->getCertificate()) {
-            $this->getCertificate()->setPurifier(null);
+            $this->getCertificate()->destroyPurifier();
         }
     }
 

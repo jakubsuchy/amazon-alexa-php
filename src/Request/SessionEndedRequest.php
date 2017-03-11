@@ -36,20 +36,18 @@ class SessionEndedRequest extends BaseRequest
      * SessionEndedRequest()
      *
      * @param string $rawData - The original JSON response, before json_decode
-     * @param string $applicationId - Your Alexa Dev Portal application ID
      * @param Certificate $certificate - Override the auto-generated Certificate with your own
      * @param Application $application - Override the auto-generated Application with your own
      * @param \HTMLPurifier $purifier
      */
     public function __construct(
         $rawData,
-        $applicationId,
         Certificate $certificate,
         Application $application,
         \HTMLPurifier $purifier
     ) {
         // Parent construct
-        parent::__construct($rawData, $applicationId, $certificate, $application, $purifier);
+        parent::__construct($rawData, $certificate, $application, $purifier);
 
         // Set reason
         $this->setReason($this->getData()['request']['reason']);
