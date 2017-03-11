@@ -55,7 +55,7 @@ class User
 
         // Set fields
         $this->setUserId($data['userId']);
-        $this->setAccessToken($data['accessToken']);
+        $this->setAccessToken(isset($data['accessToken']) ? $data['accessToken'] : null);
     }
 
     // Accessors
