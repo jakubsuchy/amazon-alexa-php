@@ -11,6 +11,19 @@ namespace Alexa\Utility;
  */
 trait PurifierHelper
 {
+    // Public Methods
+
+    /**
+     * destroyPurifier()
+     *
+     * When the purifier is no longer needed by your application, you can call ::destroyPurifier on the objects
+     * to set it null.  This makes the object easier to log.
+     */
+    public function destroyPurifier()
+    {
+        $this->purifier = null;
+    }
+
     // Protected Methods
 
     /**
@@ -29,14 +42,4 @@ trait PurifierHelper
         return $purifier;
     }
 
-    /**
-     * destroyPurifier()
-     *
-     * When the purifier is no longer needed by your application, you can call ::destroyPurifier on the objects
-     * to set it null.  This makes the object easier to log.
-     */
-    protected function destroyPurifier()
-    {
-        $this->purifier = null;
-    }
 }
