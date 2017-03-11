@@ -27,7 +27,7 @@ class Reprompt
      *
      * @param OutputSpeechInterface $outputSpeech
      */
-    public function __construct(OutputSpeech $outputSpeech)
+    public function __construct(OutputSpeechInterface $outputSpeech)
     {
         $this->outputSpeech = $outputSpeech;
     }
