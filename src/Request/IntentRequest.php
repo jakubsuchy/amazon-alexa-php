@@ -2,8 +2,10 @@
 
 namespace Alexa\Request;
 
-use Alexa\Utility\Purifier\HasPurifier;
 use Symfony\Component\Validator\Constraints as Assert;
+
+use Alexa\Request\BaseRequest;
+use Alexa\Utility\Purifier\HasPurifier;
 
 /**
  * Class IntentRequest
@@ -12,7 +14,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *
  * @package Alexa\Request
  */
-class IntentRequest extends Request implements RequestInterface
+class IntentRequest extends BaseRequest
 {
     // Traits
 

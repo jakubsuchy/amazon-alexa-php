@@ -5,6 +5,7 @@ namespace Alexa\Request;
 use Symfony\Component\Validator\Constraints as Assert;
 
 use Alexa\Utility\Purifier\HasPurifier;
+use Alexa\Request\BaseRequest;
 
 /**
  * Class SessionEndedRequest
@@ -13,7 +14,7 @@ use Alexa\Utility\Purifier\HasPurifier;
  *
  * @package Alexa\Request
  */
-class SessionEndedRequest extends Request
+class SessionEndedRequest extends BaseRequest
 {
     // Traits
 

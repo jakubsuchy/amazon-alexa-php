@@ -3,6 +3,7 @@
 namespace Alexa\Response\Card;
 
 use Alexa\Response\Card\CardInterface;
+use Alexa\Response\Card\CardTypes;
 
 /**
  * Class StandardCard
@@ -14,8 +15,6 @@ use Alexa\Response\Card\CardInterface;
 class StandardCard implements CardInterface
 {
     // Constants
-
-    const CARD_TYPE = 'Standard';
 
     const ERROR_TITLE_NOT_SET = 'You must provide a title.';
     const ERROR_TEXT_NOT_SET = 'You must provide card text.';
@@ -67,7 +66,7 @@ class StandardCard implements CardInterface
     public function render()
     {
         return [
-            'type' => self::CARD_TYPE,
+            'type' => CardTypes::TYPE_STANDARD,
             'title' => $this->getTitle(),
             'text' => $this->getText(),
             'image' => [

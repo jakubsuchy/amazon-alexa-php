@@ -3,6 +3,7 @@
 namespace Alexa\Response\OutputSpeech;
 
 use Alexa\Response\OutputSpeech\OutputSpeechInterface;
+use Alexa\Response\OutputSpeech\OutputSpeechTypes;
 
 /**
  * Class SsmlOutputSpeech
@@ -14,8 +15,6 @@ use Alexa\Response\OutputSpeech\OutputSpeechInterface;
 class SsmlOutputSpeech implements OutputSpeechInterface
 {
     // Constants
-
-    const OUTPUT_SPEECH_TYPE_SSML = 'SSML';
 
     const ERROR_SSML_NOT_SET  = 'You must provide output speech SSML.';
 
@@ -46,7 +45,7 @@ class SsmlOutputSpeech implements OutputSpeechInterface
     public function render()
     {
         return [
-            'type' => self::OUTPUT_SPEECH_TYPE_SSML,
+            'type' => OutputSpeechTypes::TYPE_SSML,
             'ssml' => $this->getSsml()
         ];
     }

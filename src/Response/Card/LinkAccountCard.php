@@ -3,6 +3,7 @@
 namespace Alexa\Response\Card;
 
 use Alexa\Response\Card\CardInterface;
+use Alexa\Response\Card\CardTypes;
 
 /**
  * Class LinkAccountCard
@@ -13,10 +14,6 @@ use Alexa\Response\Card\CardInterface;
  */
 class LinkAccountCard implements CardInterface
 {
-    // Constants
-
-    const CARD_TYPE = 'LinkAccount';
-
     // Public Methods
 
     /**
@@ -27,7 +24,7 @@ class LinkAccountCard implements CardInterface
     public function render()
     {
         return [
-            'type' => self::CARD_TYPE
+            'type' => CardTypes::TYPE_LINK_ACCOUNT
         ];
     }
 }

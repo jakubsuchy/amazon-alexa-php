@@ -3,6 +3,7 @@
 namespace Alexa\Response\Card;
 
 use Alexa\Response\Card\CardInterface;
+use Alexa\Response\Card\CardTypes;
 
 /**
  * Class SimpleCard
@@ -14,8 +15,6 @@ use Alexa\Response\Card\CardInterface;
 class SimpleCard implements CardInterface
 {
     // Constants
-
-    const CARD_TYPE = 'Simple';
 
     const ERROR_TITLE_NOT_SET = 'You must provide a title for the card';
     const ERROR_CONTENT_NOT_SET = 'You must provide the content for the card';
@@ -55,7 +54,7 @@ class SimpleCard implements CardInterface
     public function render()
     {
         return [
-            'type' => self::CARD_TYPE,
+            'type' => CardTypes::TYPE_SIMPLE,
             'title' => $this->getTitle(),
             'content' => $this->getContent()
         ];

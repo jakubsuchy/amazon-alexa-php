@@ -3,6 +3,7 @@
 namespace Alexa\Response\OutputSpeech;
 
 use Alexa\Response\OutputSpeech\OutputSpeechInterface;
+use Alexa\Response\OutputSpeech\OutputSpeechTypes;
 
 /**
  * Class PlainTextOutputSpeech
@@ -14,8 +15,6 @@ use Alexa\Response\OutputSpeech\OutputSpeechInterface;
 class PlainTextOutputSpeech implements OutputSpeechInterface
 {
     // Constants
-
-    const OUTPUT_SPEECH_TYPE = 'PlainText';
 
     const ERROR_TEXT_NOT_SET  = 'You must provide output speech text.';
 
@@ -49,7 +48,7 @@ class PlainTextOutputSpeech implements OutputSpeechInterface
     public function render()
     {
         return [
-            'type' => self::OUTPUT_SPEECH_TYPE,
+            'type' => OutputSpeechTypes::TYPE_PLAIN_TEXT,
             'text' => $this->getText()
         ];
     }
