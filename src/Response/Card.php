@@ -33,7 +33,7 @@ class Card
     /**
      * @var string
      */
-    protected $type;
+    protected $type = self::CARD_TYPE_SIMPLE;
     /**
      * @var string
      */

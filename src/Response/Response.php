@@ -108,6 +108,7 @@ class Response
     public function withCard($title, $content)
     {
         $this->card = new Card;
+        $this->card->setType(Card::CARD_TYPE_SIMPLE);
         $this->card->setTitle($title);
         $this->card->setSimpleCardContent($content);
         
@@ -129,6 +130,7 @@ class Response
     public function withStandardCard($title, $cardText, $smallImageUrl, $largeImageUrl)
     {
         $this->card = new Card;
+        $this->card->setType(Card::CARD_TYPE_STANDARD);
         $this->card->setTitle($title);
         $this->card->setStandardCardText($cardText);
         $this->card->setSmallImageUrl($smallImageUrl);
