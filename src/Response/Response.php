@@ -228,6 +228,9 @@ class Response
         if ($this->getReprompt()) {
             $outputArray['response']['reprompt'] = $this->getReprompt();
         }
+
+        // Return
+        return $outputArray;
     }
 
     // Accessors
