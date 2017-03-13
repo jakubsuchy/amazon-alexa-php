@@ -56,6 +56,8 @@ class RequestFactory
         $data = json_decode($rawData, true);
 
         // Generate defaults
+        $purifier = $purifier ?: PurifierFactory::generatePurifier(PurifierFactory::DEFAULT_CACHE_PATH);
+
         $application = $application ?: new Application(
             $data['session']['application']['applicationId'],
             $purifier
@@ -63,8 +65,6 @@ class RequestFactory
 
         $certificate = $certificate ?:
             new Certificate($_SERVER['HTTP_SIGNATURECERTCHAINURL'], $_SERVER['HTTP_SIGNATURE'], $purifier);
-
-        $purifier = $purifier ?: PurifierFactory::generatePurifier(PurifierFactory::DEFAULT_CACHE_PATH);
 
         // Generate base request
         /** @var BaseRequest $request */
