@@ -17,6 +17,7 @@ class Application
 {
     // Constants
 
+    const ERROR_APPLICATION_ID_NOT_STRING = 'The provided value for the Alexa application ID was not a string';
     const ERROR_APPLICATION_ID_NOT_MATCHED = 'The application ID \'%\' found in the request does not match ' .
         'any of the expected application IDs.';
 
@@ -27,12 +28,12 @@ class Application
     // Fields
 
     /**
-     * @var array[string]
+     * @var string
      *
-     * @Assert\Type("array")
+     * @Assert\Type("string")
      * @Assert\NotBlank
      */
-    private $expectedApplicationIds;
+    private $applicationId;
 
 
     // Hooks
@@ -40,16 +41,16 @@ class Application
     /**
      * Application constructor.
      *
-     * @param $expectedApplicationIds
+     * @param string $applicationId
      * @param \HTMLPurifier $purifier
      */
-    public function __construct(array $expectedApplicationIds, \HTMLPurifier $purifier)
+    public function __construct($applicationId, \HTMLPurifier $purifier)
     {
         // Set purifier
         $this->setPurifier($purifier);
 
         // Set application IDs
-        $this->setExpectedApplicationIds($expectedApplicationIds);
+        $this->setApplicationId($applicationId);
     }
 
     // Public Methods
@@ -57,15 +58,15 @@ class Application
     /**
      * validateApplicationId()
      *
-     * Confirms the provided application ID is one of the list provided as valid
+     * Confirms the application ID from the request is one in the list provided as valid
      *
-     * @param $requestApplicationId
+     * @param array[string] $validApplicationIds
      *
      * @throws \InvalidArgumentException
      */
-    public function validateApplicationId($requestApplicationId)
+    public function validateApplicationId(array $validApplicationIds)
     {
-        if (!in_array($requestApplicationId, $this->getExpectedApplicationIds())) {
+        if (!in_array($this->getApplicationId(), $validApplicationIds)) {
             throw new \InvalidArgumentException(self::ERROR_APPLICATION_ID_NOT_MATCHED);
         }
     }
@@ -73,20 +74,24 @@ class Application
     // Accessors
 
     /**
-     * @return array
+     * @return string
      */
-    public function getExpectedApplicationIds()
+    public function getApplicationId()
     {
-        return $this->expectedApplicationIds;
+        return $this->applicationId;
     }
 
     // Mutators
 
     /**
-     * @param array $expectedApplicationIds
+     * @param string $applicationId
      */
-    protected function setExpectedApplicationIds(array $expectedApplicationIds)
+    protected function setApplicationId($applicationId)
     {
-        $this->expectedApplicationIds = $expectedApplicationIds;
+        if (!is_string($applicationId)) {
+            throw new \InvalidArgumentException(self::ERROR_APPLICATION_ID_NOT_STRING);
+        }
+
+        $this->applicationId = $applicationId;
     }
 }

@@ -34,34 +34,36 @@ class RequestFactory
      * Return an instance of the correct type of Request from the raw JSON string
      *
      * @param string $rawData - The raw POST value, before json_decode
-     * @param string $applicationId - Your application's ID (from the dev portal)
+     * @param array[string] $validApplicationIds - Your application's allowed Alexa application IDs (from the dev
+     *                                                portal for each skill)
      * @param Certificate|null $certificate - Override the auto-generated Certificate with your own
      * @param Application|null $application - Override the auto-generated Application with your own
      * @param \HTMLPurifier|null $purifier
      *
-     * @return \Alexa\Request\Request
-     * @throws RuntimeException
+     * @return \Alexa\Request\RequestInterface
+     * @throws \RuntimeException - If the request type on the Alexa request is not one of the known types
+     * @throws \InvalidArgumentException - If the application ID on the Alexa request is not one of the provided
+     *                                     $validApplicationIds
      */
     public function fromRawData(
         $rawData,
-        array $expectedApplicationIds,
+        array $validApplicationIds,
         Certificate $certificate = null,
         Application $application = null,
         \HTMLPurifier $purifier = null
     ) {
-        // Generate purifier
-        if (!$purifier) {
-            $purifierFactory = new PurifierFactory();
-            $purifier = $purifierFactory->generatePurifier(PurifierFactory::DEFAULT_CACHE_PATH);
-        }
-
         // Parse data for construction
         $data = json_decode($rawData, true);
 
-        // Perform defaults
-        $application = $application ?: new Application($expectedApplicationIds, $purifier);
+        // Generate defaults
+        $application = $application ?: new Application(
+            $data['session']['application']['applicationId'],
+            $purifier
+        );
+
         $certificate = $certificate ?:
             new Certificate($_SERVER['HTTP_SIGNATURECERTCHAINURL'], $_SERVER['HTTP_SIGNATURE'], $purifier);
+
         $purifier = $purifier ?: PurifierFactory::generatePurifier(PurifierFactory::DEFAULT_CACHE_PATH);
 
         // Generate base request
@@ -69,10 +71,7 @@ class RequestFactory
         $request = $this->generateRequest($data, $rawData, $purifier, $certificate, $application);
 
         // Validate received application ID matches client value
-        $requestApplicationId = isset($data['session']['application']['applicationId']) ?
-            $data['session']['application']['applicationId'] :
-            null;
-        $request->getApplication()->validateApplicationId($requestApplicationId);
+        $request->getApplication()->validateApplicationId($validApplicationIds);
 
         // Validate that the request signature matches the certificate
         $request->getCertificate()->validateRequest($rawData);
