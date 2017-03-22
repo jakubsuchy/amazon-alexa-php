@@ -67,7 +67,9 @@ class Application
     public function validateApplicationId(array $validApplicationIds)
     {
         if (!in_array($this->getApplicationId(), $validApplicationIds)) {
-            throw new \InvalidArgumentException(self::ERROR_APPLICATION_ID_NOT_MATCHED);
+            throw new \InvalidArgumentException(
+                sprintf(self::ERROR_APPLICATION_ID_NOT_MATCHED, $this->getApplicationId())
+            );
         }
     }
 
