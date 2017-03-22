@@ -18,7 +18,7 @@ class Application
     // Constants
 
     const ERROR_APPLICATION_ID_NOT_STRING = 'The provided value for the Alexa application ID was not a string';
-    const ERROR_APPLICATION_ID_NOT_MATCHED = 'The application ID \'%\' found in the request does not match ' .
+    const ERROR_APPLICATION_ID_NOT_MATCHED = 'The application ID \'%s\' found in the request does not match ' .
         'any of the expected application IDs.';
 
     // Traits
