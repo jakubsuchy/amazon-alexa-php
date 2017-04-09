@@ -26,7 +26,6 @@ class IntentRequest extends BaseRequest
     const KEY_SLOT_VALUE = 'value';
 
     const ERROR_INTENT_NAME_NOT_SET = 'The intent name was not set in the request';
-    const ERROR_SLOTS_NOT_PRESENT = 'The slots array was not present in the request';
 
     // Fields
 
@@ -112,7 +111,7 @@ class IntentRequest extends BaseRequest
     {
         // Short-circuit on null
         if (!isset($this->getData()['request']['intent']['slots'])) {
-            throw new \InvalidArgumentException(self::ERROR_SLOTS_NOT_PRESENT);
+            return;
         }
 
         // Iterate the slots, attaching each
