@@ -2,12 +2,9 @@
 
 namespace Alexa\Request;
 
-use RuntimeException;
-use InvalidArgumentException;
 use DateTime;
-
-use Alexa\Request\Certificate;
-use Alexa\Request\Application;
+use InvalidArgumentException;
+use RuntimeException;
 
 class Request {
 
@@ -19,10 +16,15 @@ class Request {
 	public $rawData;
 	public $applicationid;
 
-	/**
-	 * Set up Request with RequestId, timestamp (DateTime) and user (User obj.)
-	 * @param type $data
-	 */
+	protected $application;
+	protected $certificate;
+
+    /**
+     * Set up Request with RequestId, timestamp (DateTime) and user (User obj.)
+     * @param $rawData
+     * @param string|null $applicationId
+     * @internal param mixed $data
+     */
 	public function __construct($rawData, $applicationId = NULL) {
 		if (!is_string($rawData)) {
 			throw new InvalidArgumentException('Alexa Request requires the raw JSON data to validate request signature');
@@ -48,7 +50,7 @@ class Request {
 	 * to extend it to for example cache their certificates.
 	 * @param \Alexa\Request\Certificate $certificate
 	 */
-	public function setCertificateDependency(\Alexa\Request\Certificate $certificate) {
+	public function setCertificateDependency(Certificate $certificate) {
 		$this->certificate = $certificate;
 	}
 
@@ -57,14 +59,13 @@ class Request {
 	 * to extend it.
 	 * @param \Alexa\Request\Application $application
 	 */
-	public function setApplicationDependency(\Alexa\Request\Application $application) {
+	public function setApplicationDependency(Application $application) {
 		$this->application = $application;
 	}
 
 	/**
-	 * Instance the correct type of Request, based on the $jons->request->type
+	 * Instance the correct type of Request, based on the $json->request->type
 	 * value.
-	 * @param type $data
 	 * @return \Alexa\Request\Request   base class
 	 * @throws RuntimeException
 	 */

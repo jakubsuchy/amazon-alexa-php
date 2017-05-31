@@ -7,7 +7,11 @@ class Response {
 	public $sessionAttributes = array();
 
 	public $outputSpeech = null;
+
+	/** @var Card|null  */
 	public $card = null;
+
+	/** @var Reprompt|null  */
 	public $reprompt = null;
 	public $shouldEndSession = false;
 
@@ -26,7 +30,7 @@ class Response {
 
 		return $this;
 	}
-        
+
         /**
          * Set up response with SSML.
          * @param string $ssml
@@ -36,7 +40,7 @@ class Response {
                 $this->outputSpeech = new OutputSpeech;
                 $this->outputSpeech->type = 'SSML';
                 $this->outputSpeech->ssml = $ssml;
-                
+
                 return $this;
         }
 
@@ -51,7 +55,7 @@ class Response {
 
 		return $this;
 	}
-        
+
         /**
          * Set up reprompt with given ssml
          * @param string $ssml
@@ -75,13 +79,13 @@ class Response {
 		$this->card = new Card;
 		$this->card->title = $title;
 		$this->card->content = $content;
-		
+
 		return $this;
 	}
 
         /**
          * Set if it should end the session
-         * @param type $shouldEndSession
+         * @param bool $shouldEndSession
          * @return \Alexa\Response\Response
          */
 	public function endSession($shouldEndSession = true) {
@@ -89,7 +93,7 @@ class Response {
 
 		return $this;
 	}
-        
+
         /**
          * Add a session attribute that will be passed in every requests.
          * @param string $key
@@ -101,7 +105,7 @@ class Response {
 
         /**
          * Return the response as an array for JSON-ification
-         * @return type
+         * @return array
          */
 	public function render() {
 		return array(

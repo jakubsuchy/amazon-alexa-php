@@ -19,12 +19,12 @@ class Session {
                         $this->attributes = $data['attributes'];
                 }
 	}
-        
+
         /**
          * Remove "SessionId." prefix from the send session id, as it's invalid
          * as a session id (at least for default session, on file).
-         * @param type $sessionId
-         * @return type
+         * @param string $sessionId
+         * @return string
          */
         protected function parseSessionId($sessionId) {
                 $prefix = 'SessionId.';
@@ -34,7 +34,7 @@ class Session {
                         return $sessionId;
                 }
         }
-        
+
         /**
          * Open PHP SESSION using amazon provided sessionId, for storing data about the session.
          * Session cookie won't be sent.
@@ -44,7 +44,7 @@ class Session {
                 session_id($this->parseSessionId($this->sessionId));
                 return session_start();
         }
-        
+
         /**
          * Returns attribute value of $default.
          * @param string $key

@@ -8,9 +8,8 @@
 
 namespace Alexa\Request;
 
-use RuntimeException;
-use InvalidArgumentException;
 use DateTime;
+use InvalidArgumentException;
 
 class Certificate {
 	const TIMESTAMP_VALID_TOLERANCE_SECONDS = 30;
@@ -31,9 +30,11 @@ class Certificate {
 	public $requestSignature;
 	public $requestData;
 
-	/**
-	 * @param type $certificateUri
-	 */
+    /**
+     * @param string $certificateUrl
+     * @param string $signature
+     * @internal param string $certificateUri
+     */
 	public function __construct($certificateUrl, $signature) {
 		$this->certificateUrl = $certificateUrl;
 		$this->requestSignature = $signature;
@@ -56,10 +57,10 @@ class Certificate {
 		$this->validateRequestSignature($requestData);
 	}
 
-	/**
-	 * Check if request is whithin the allowed time.
-	 * @throws InvalidArgumentException
-	 */
+    /**
+     * Check if request is within the allowed time.
+     * @param int $timestamp
+     */
 	public function validateTimestamp($timestamp) {
 		$now = new DateTime;
 		$timestamp = new DateTime($timestamp);
@@ -79,7 +80,7 @@ class Certificate {
 		}
 	}
 	/*
-	 * @params $requestData 
+	 * @params $requestData
 	 * @throws InvalidArgumentException
 	 */
 	public function validateRequestSignature($requestData) {
@@ -92,7 +93,7 @@ class Certificate {
 	}
 
 	/**
-	 * Returns true if the ceertificate is not expired.
+	 * Returns true if the certificate is not expired.
 	 *
 	 * @param array $parsedCertificate
 	 * @return boolean
@@ -104,11 +105,12 @@ class Certificate {
 		return ($validFrom <= $time && $time <= $validTo);
 	}
 
-	/**
-	 * Returns true if the configured service domain is present/valid, false if invalid/not present
-	 * @param array $parsedCertificate
-	 * @return boolean
-	 */
+    /**
+     * Returns true if the configured service domain is present/valid, false if invalid/not present
+     * @param array $parsedCertificate
+     * @param string $amazonServiceDomain
+     * @return bool
+     */
 	public function validateCertificateSAN(array $parsedCertificate, $amazonServiceDomain)
 	{
 		if (strpos($parsedCertificate['extensions']['subjectAltName'], $amazonServiceDomain) === false) {
@@ -138,10 +140,11 @@ class Certificate {
 	}
 
 
-	/**
-	 * Parse the X509 certificate
-	 * @param $certificate The certificate contents
-	 */
+    /**
+     * Parse the X509 certificate
+     * @param string $certificate The certificate contents
+     * @return array
+     */
 	public function parseCertificate($certificate) {
 		return openssl_x509_parse($certificate);
 	}
@@ -166,7 +169,7 @@ class Certificate {
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 		$st = curl_exec($ch);
 		curl_close($ch);
-		
+
 		// Return the certificate contents;
 		return $st;
 	}
