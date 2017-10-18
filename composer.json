@@ -3,6 +3,12 @@
     "description": "Amazon Alexa interface for PHP - XSS Filtering, Improved Testability",
     "license": "MIT",
     "type": "library",
+    "keywords": [
+      "Amazon Echo",
+      "Amazon Alexa",
+      "Alexa",
+      "Echo"
+    ],
     "authors": [
         {
             "name": "Mathias Hansen",
