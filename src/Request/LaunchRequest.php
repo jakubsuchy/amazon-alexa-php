@@ -2,13 +2,14 @@
 
 namespace Alexa\Request;
 
-class LaunchRequest extends Request {
-	public $applicationId;
+use Symfony\Component\Validator\Constraints as Assert;
 
-	public function __construct($rawData) {
-                parent::__construct($rawData);                                           
-                $data = $this->data;
+use Alexa\Request\BaseRequest;
 
-		$this->applicationId = $data['session']['application']['applicationId'];
-	}
+/**
+ * Class LaunchRequest
+ * @package Alexa\Request
+ */
+class LaunchRequest extends BaseRequest
+{
 }
